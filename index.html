@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIESEC in Benak - EP Experience Hub (Fixed)</title>
+    <style>
+        /* --- Base & Variables --- */
+        :root {
+            --aiesec-blue: #037ef3;
+            --aiesec-orange: #f89e31;
+            --text-dark: #333;
+            --text-light: #fff;
+            --bg-white: #ffffff;
+            --border-color: #b0b0b0;
+            --border-light: #d0d0d0;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.15);
+            --transition-speed: 0.3s;
+            /* --- WALL BACKGROUND --- */
+            /* !!! REPLACE THIS URL !!! */
+            --wall-texture-url: 'https://www.transparenttextures.com/patterns/concrete-wall.png'; /* Placeholder */
+            --wall-fallback-color: #d8d8d8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--wall-fallback-color);
+            background-image: linear-gradient(rgba(255,255,255,0.05), rgba(0,0,0,0.05)), url(var(--wall-texture-url));
+            background-attachment: fixed;
+            background-size: auto;
+            color: var(--text-dark);
+            line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; font-size: 16px;
+        }
+
+        /* --- Layout & View Switching --- */
+        header, main, footer { width: 100%; }
+        main { flex-grow: 1; padding: 1rem 1.5rem; max-width: 1700px; margin: 0 auto; }
+        .view-container { display: none; /* Hide all view containers by default */ }
+        .view-container.active { display: block; /* Show the active one */ }
+        .controls-container { /* Wrapper for control sections */
+             transition: opacity 0.3s ease, max-height 0.4s ease;
+             overflow: hidden;
+        }
+         .controls-container.hidden {
+             opacity: 0;
+             max-height: 0;
+             margin-bottom: 0 !important; /* Ensure no margin when hidden */
+             pointer-events: none;
+         }
+
+        .container-section { background-color: rgba(250, 250, 245, 0.92); padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 4px; box-shadow: var(--shadow-md); border: 1px solid #e0e0d0; transition: margin 0.5s, padding 0.5s; }
+
+        /* --- Header --- */
+        header { background-color: var(--aiesec-blue); color: var(--text-light); padding: 0.8rem 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+        .logo-container { display: flex; align-items: center; gap: 1rem; }
+        .logo-placeholder { font-size: 1.5rem; font-weight: bold; background: var(--text-light); color: var(--aiesec-blue); padding: 5px 10px; border-radius: 4px; }
+        header h1 { margin: 0; font-size: 1.4rem; font-weight: 700; text-align: center; flex-grow: 1; line-height: 1.2; }
+        .header-actions button { background-color: var(--aiesec-orange); color: var(--text-light); border: none; border-radius: 50%; width: 38px; height: 38px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-speed); box-shadow: var(--shadow-sm); }
+        #focus-mode-toggle[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; background-color: #aaa; }
+
+        /* --- View Selector --- */
+        .view-selector { background-color: rgba(230, 242, 255, 0.9); padding: 0.6rem 1rem; text-align: center; border-bottom: 1px dashed var(--border-color); box-shadow: var(--shadow-sm); margin-bottom: 1rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+        .view-selector button { padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: bold; cursor: pointer; border: 1px solid transparent; border-radius: 5px; background-color: rgba(255,255,255, 0.8); color: var(--aiesec-blue); transition: all var(--transition-speed) ease; }
+        .view-selector button.active { background-color: var(--aiesec-orange); color: var(--text-light); border-color: #d98200; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+
+        /* --- Add Media Section --- */
+        .add-media-section h2 { color: var(--aiesec-blue); border-bottom: 1px solid var(--aiesec-light-blue); padding-bottom: 0.5rem; margin-bottom: 1.2rem; font-size: 1.4rem;}
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; align-items: end; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 0.4rem; font-weight: bold; font-size: 0.9rem; color: #555;}
+        .form-group input[type="text"], .form-group select { padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.95rem; width: 100%; background-color: var(--bg-white); }
+        .add-actions { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem; }
+        #add-media-btn { padding: 0.7rem 1.5rem; background-color: var(--aiesec-orange); color: var(--text-light); border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        #fetch-title-btn { background-color: var(--aiesec-blue); font-size: 0.85rem; padding: 0.5rem 1rem; }
+        .form-feedback { grid-column: 1 / -1; text-align: center; margin-top: 0.5rem; padding: 0.6rem; border-radius: 4px; font-weight: bold; opacity: 0; transition: opacity var(--transition-speed) ease-in-out; min-height: 1.4em; font-size: 0.9rem;}
+        .form-feedback.show { opacity: 1; }
+        .input-hint { font-size: 0.8rem; color: #777; margin-top: 0.2rem; }
+
+
+        /* --- Search & Sort Controls --- */
+        .controls-section { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; padding: 0.8rem 1rem; background-color: rgba(250, 250, 245, 0.90); border-radius: 4px; box-shadow: var(--shadow-sm); border: 1px solid #e0e0d0; }
+        .search-control, .sort-control { display: flex; flex-direction: column; flex-grow: 1; min-width: 200px; }
+        .search-control label, .sort-control label { margin-bottom: 0.3rem; font-weight: bold; font-size: 0.9rem; color: #555; }
+        .search-control input, .sort-control select { padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.95rem; background-color: var(--bg-white); }
+        .search-control input { padding-left: 2.2rem; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23888" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>'); background-repeat: no-repeat; background-position: 0.7rem center; }
+
+        /* --- Filter Section --- */
+        .filter-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .filter-section h3 { margin-bottom: 0; color: var(--aiesec-blue); font-size: 1.3rem; }
+        #help-toggle-btn { background: none; border: 1px solid var(--aiesec-blue); color: var(--aiesec-blue); font-weight: bold; padding: 0.3rem 0.8rem; border-radius: 15px; cursor: pointer; transition: all var(--transition-speed); font-size: 0.9rem; }
+        .filter-controls { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+        .filter-group { border: 1px solid var(--border-light); border-radius: 4px; padding: 1.6rem 1rem 1rem 1rem; margin: 0; flex-grow: 1; min-width: 200px; position: relative; }
+        .filter-group legend { font-weight: bold; font-size: 0.95rem; color: var(--aiesec-blue); padding: 0 0.6em; margin: 0 0 0 1em; background-color: rgba(250, 250, 245, 0.92); width: auto; }
+        .filter-group div { display: flex; align-items: center; gap: 0.5rem; }
+        .filter-group input[type="checkbox"] { cursor: pointer; accent-color: var(--aiesec-orange); width: 1em; height: 1em; }
+        .filter-group label { cursor: pointer; font-size: 0.95rem; }
+        .filter-group input[type="checkbox"]:checked + label { color: var(--aiesec-orange); font-weight: bold; }
+
+        /* --- Help Panel --- */
+         .filter-help-panel { position: fixed; top: 0; right: 0; width: 320px; height: 100%; background-color: var(--bg-white); box-shadow: -5px 0 15px rgba(0,0,0,0.15); transform: translateX(100%); transition: transform var(--transition-speed) ease-in-out; z-index: 1010; padding: 1.5rem; padding-top: 4rem; overflow-y: auto; border-left: 1px solid var(--border-color); }
+        .filter-help-panel.active { transform: translateX(0); }
+        .filter-help-panel h4 { color: var(--aiesec-blue); margin-bottom: 1rem; font-size: 1.3rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.5rem;}
+        .help-panel-close-btn { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.8rem; color: #aaa; cursor: pointer; line-height: 1; padding: 0; }
+
+        /* === Video Wall & Items === */
+        #video-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.8rem; padding: 1.5rem 0.5rem; }
+        .video-item { background-color: var(--bg-white); border-radius: 3px; overflow: hidden; border: 1px solid #aaa; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1), 2px 2px 5px rgba(0, 0, 0, 0.2); transition: all var(--transition-speed) ease; display: flex; flex-direction: column; position: relative; }
+        .video-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; width: 100%; background-color: #333; border-bottom: 1px solid #aaa; }
+        .video-embed-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+        .video-info { padding: 0.8rem 1rem; flex-grow: 1; display: flex; flex-direction: column; background-color: #fdfdfd; }
+        .video-info h4 { margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--aiesec-blue); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .video-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+        .tag { background-color: #e9e9e9; color: #555; padding: 0.2rem 0.6rem; border-radius: 3px; font-size: 0.8rem; border: 1px solid #ccc; cursor: pointer; transition: all var(--transition-speed); }
+        .video-actions { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--border-light); margin-left: -1rem; margin-right: -1rem; margin-bottom: -0.8rem; padding: 0.6rem 1rem; background-color: #f8f8f8; }
+        .video-actions button { background: #eee; color: #555; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; line-height: 1; }
+        .video-actions button:hover { background: #ddd; border-color: #bbb; }
+
+        /* === Photo Wall & Items === */
+        #photo-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; padding: 1.5rem 0.5rem; }
+        .photo-item { background-color: var(--bg-white); border-radius: 3px; border: 1px solid #aaa; box-shadow: inset 0 0 4px rgba(0,0,0,0.1), 1px 1px 4px rgba(0,0,0,0.2); transition: all var(--transition-speed) ease; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .photo-image-container { width: 100%; background-color: #e0e0e0; overflow: hidden; border-bottom: 1px solid #aaa; min-height: 150px; display: flex; align-items: center; justify-content: center;} /* Center potential placeholder */
+        .photo-image-container img { display: block; width: 100%; height: auto; object-fit: cover; }
+        .photo-info { padding: 0.6rem 0.8rem; flex-grow: 1; display: flex; flex-direction: column; background-color: #fdfdfd; }
+        .photo-info h5 { margin-bottom: 0.4rem; font-size: 1rem; color: var(--text-dark); font-weight: normal; line-height: 1.3; max-height: 3.9em; overflow: hidden; text-overflow: ellipsis; }
+        .photo-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+        .photo-actions { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--border-light); margin: 0.6rem -0.8rem -0.6rem; padding: 0.5rem 0.8rem; background-color: #f8f8f8; }
+        .photo-actions button { background: #eee; color: #555; border: 1px solid #ccc; border-radius: 3px; padding: 3px 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; }
+        .photo-actions button:hover { background: #ddd; border-color: #bbb; }
+
+
+        /* --- Opportunities View --- */
+        #opportunities-view-container { padding: 0; margin: 0; background-color: var(--bg-white); box-shadow: var(--shadow-md); border-radius: 4px; overflow: hidden; position: relative; height: calc(100vh - 160px); /* Adjusted height */}
+        #opportunities-frame { width: 100%; height: 100%; border: none; }
+        #opportunities-fallback { padding: 2rem; text-align: center; color: #555; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #opportunities-fallback a { color: var(--aiesec-blue); font-weight: bold; }
+
+        /* --- Wall Status Message (Shared) --- */
+        .wall-status-message { color: #444; text-align: center; width: 100%; padding: 3rem 1rem; font-size: 1.1rem; display: none; background-color: rgba(245, 245, 240, 0.85); border-radius: 4px; box-shadow: var(--shadow-sm); border: 1px dashed var(--border-color); margin-top: 1rem; }
+        .wall-status-message.show { display: block; }
+        .wall-status-message .loader { border: 4px solid #ccc; border-radius: 50%; border-top: 4px solid #666; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 1rem auto 0.5rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- Focus Mode (Affects Controls Container) --- */
+        body.focus-mode-active .controls-container { opacity: 0; max-height: 0; margin-bottom: 0 !important; }
+        body.focus-mode-active .view-selector { max-height: 0; opacity: 0; padding: 0; margin-bottom: 0; border: none; overflow: hidden; }
+        /* Hide info only for video items in focus */
+        body.focus-mode-active #video-wall-container .video-info { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; pointer-events: none; border: none; }
+
+
+        /* --- Edit Modal --- */
+        .modal { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: var(--modal-bg); align-items: center; justify-content: center; animation: fadeIn 0.3s ease-out; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: var(--bg-white); padding: 2.5rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); width: 90%; max-width: 550px; position: relative; animation: slideIn 0.4s ease-out; }
+        .modal-close-btn { position: absolute; top: 15px; right: 20px; font-size: 2rem; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1; }
+        .modal h3 { color: var(--aiesec-blue); margin-bottom: 1.8rem; font-size: 1.6rem; text-align: center; }
+        .modal .form-group { margin-bottom: 1.2rem; }
+        .modal-actions { text-align: right; margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.8rem; }
+        .modal-actions button { padding: 0.7rem 1.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; font-size: 1rem; }
+        .modal-actions .save-btn { background-color: #28a745; color: white; }
+        .modal-actions .cancel-btn { background-color: #ccc; color: #333; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- Footer --- */
+        footer { text-align: center; padding: 1.5rem; margin-top: 3rem; background-color: rgba(51, 51, 51, 0.85); color: #e0e0e0; font-size: 0.95rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        footer a { color: var(--aiesec-orange); text-decoration: none; }
+
+        /* --- Utility & Responsive --- */
+        .hidden { display: none; }
+        @media (max-width: 768px) {
+             body { font-size: 15px; background-attachment: scroll; }
+             header { position: static; }
+             main { padding: 0.8rem; }
+             .view-selector { gap: 0.3rem; padding: 0.5rem; }
+             .container-section { padding: 1rem; margin-bottom: 1rem; }
+             #video-wall, #photo-wall { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; padding: 1rem 0.2rem; }
+             .video-actions, .photo-actions { padding: 0.5rem 0.8rem; gap: 0.4rem; }
+             .filter-help-panel { width: 280px; }
+             #opportunities-view-container { height: calc(100vh - 120px); }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <span class="logo-placeholder">AIESEC</span>
+            <h1>AIESEC in Benak<br>EP Experience Hub</h1>
+        </div>
+        <div class="header-actions">
+            <button id="focus-mode-toggle" title="Toggle Focus Mode (Video Wall)">
+                <span class="icon-focus-on"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- View Selector -->
+    <div class="view-selector">
+        <button id="view-btn-algeria-outgoing" class="active" data-view="video-wall-container" data-subview="algeria-outgoing">Algerian EPs Abroad</button>
+        <button id="view-btn-host-countries" data-view="video-wall-container" data-subview="host-country-experience">Host Country Videos</button>
+        <button id="view-btn-photo-wall" data-view="photo-wall-container">EP Photo Wall</button>
+        <button id="view-btn-opportunities" data-view="opportunities-view-container">AIESEC Opportunities</button> <!-- Corrected data-view -->
+    </div>
+
+    <!-- Main Content Area -->
+    <main>
+         <!-- ===== CONTROLS CONTAINER (Moved Outside View Containers) ===== -->
+         <div class="controls-container" id="controls-container">
+             <!-- Add Media Section (Context-aware) -->
+             <section class="container-section add-media-section">
+                 <h2 id="add-media-title">Add New EP Video</h2>
+                 <div class="form-grid">
+                     <div class="form-group"> <label for="media-url" id="media-url-label">YouTube URL or ID</label> <input type="text" id="media-url" placeholder="Paste link or ID"> <span class="input-hint hidden" id="photo-url-hint">Direct image link (.jpg, .png, .gif) required.</span> </div>
+                     <div class="form-group ep-type"> <label for="media-type">Experience Type</label> <select id="media-type"> <option value="algeria-outgoing">Algerian EP Abroad</option> <option value="host-country-experience">Host Country Experience</option> </select> </div>
+                     <div class="form-group"> <label for="media-title-override" id="media-title-label">Video Title</label> <input type="text" id="media-title-override" placeholder="Optional: Auto-fetches for videos"> </div>
+                     <div class="form-group"> <label for="media-tags">Tags (comma-sep.)</label> <input type="text" id="media-tags" placeholder="e.g., gv, brazil, marketing"> </div>
+                 </div>
+                 <div class="add-actions">
+                     <button id="fetch-title-btn" title="Try to get title from YouTube">Fetch Title</button>
+                     <button id="add-media-btn">Add Media</button>
+                 </div>
+                 <div id="form-feedback" class="form-feedback"></div>
+             </section>
+
+             <!-- Search/Sort Section -->
+             <section class="controls-section">
+                 <div class="search-control"> <label for="search-input">Search <span class="search-target-label">Videos</span></label> <input type="search" id="search-input" placeholder="By title or tags..."> </div>
+                 <div class="sort-control"> <label for="sort-options">Sort By</label> <select id="sort-options"> <option value="newest">Added: Newest</option> <option value="oldest">Added: Oldest</option> <option value="title_asc">Title: A-Z</option> <option value="title_desc">Title: Z-A</option> </select> </div>
+             </section>
+
+             <!-- Filter Section -->
+             <section class="container-section filter-section">
+                 <div class="filter-section-header">
+                     <h3>Filter <span class="filter-target-label">Videos</span>: <span id="current-view-filter-label">Algerian EPs Abroad</span></h3>
+                     <button id="help-toggle-btn" title="Show Filtering Help">Help (?)</button>
+                 </div>
+                 <div class="filter-controls" id="filter-controls">
+                     <fieldset class="filter-group"> <legend>Program Type</legend> <div><input type="checkbox" id="filter-gv" value="gv" data-filter-type="program"><label for="filter-gv">GV</label></div> <div><input type="checkbox" id="filter-gt" value="gt" data-filter-type="program"><label for="filter-gt">GT</label></div> <div><input type="checkbox" id="filter-gta" value="gta" data-filter-type="program"><label for="filter-gta">GTa</label></div> </fieldset>
+                     <fieldset class="filter-group" id="custom-filters"> <legend>Other Tags</legend> <div id="custom-tags-placeholder">(No custom tags yet)</div> </fieldset>
+                 </div>
+             </section>
+         </div>
+         <!-- ===== END CONTROLS CONTAINER ===== -->
+
+
+        <!-- Video Wall View Container -->
+        <div id="video-wall-container" class="view-container active">
+             <!-- Video Wall -->
+             <section id="video-wall">
+                 <div class="wall-status-message show" id="video-wall-status"> <div class="loader hidden"></div> <span class="wall-status-text">Loading Videos...</span> </div>
+             </section>
+        </div>
+
+        <!-- Photo Wall View Container -->
+        <div id="photo-wall-container" class="view-container">
+             <!-- Photo Wall -->
+             <section id="photo-wall">
+                  <div class="wall-status-message show" id="photo-wall-status"> <div class="loader hidden"></div> <span class="wall-status-text">Loading Photos...</span> </div>
+             </section>
+        </div>
+
+        <!-- Opportunities View Container -->
+        <div id="opportunities-view-container" class="view-container"> <!-- Corrected ID -->
+            <iframe id="opportunities-frame" src="https://aiesec.org/search" title="AIESEC Opportunities"></iframe> <!-- Changed default src to search -->
+            <div id="opportunities-fallback" class="hidden">
+                <p>Could not load the AIESEC opportunities page directly.</p>
+                <p>Please visit:</p>
+                <p><a href="https://aiesec.org/search" target="_blank" rel="noopener noreferrer">Search AIESEC Opportunities</a></p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Help Panel -->
+    <aside class="filter-help-panel" id="filter-help-panel">
+         <button class="help-panel-close-btn" id="help-panel-close-btn" title="Close Help">&times;</button>
+         <h4>How to Use Filters & Search</h4>
+         <p>Applies to the currently active view (<span id="current-view-help-label">Videos</span>).</p>
+         <ul>
+             <li><strong>Filtering:</strong> Check boxes to narrow results. Multiple checks in one group = OR. Checks across groups = AND.</li>
+             <li><strong>Tag Clicking:</strong> Click tags on items below to toggle filters.</li>
+             <li><strong>Search:</strong> Type keywords to find items by title/caption or tags.</li>
+             <li><strong>Sorting:</strong> Choose how items are ordered (newest, title, etc.).</li>
+             <li>Uncheck all filters and clear search to see all items.</li>
+         </ul>
+     </aside>
+
+    <!-- Footer -->
+    <footer>
+        AIESEC in Benak | Activate Your Leadership
+        <br> <a href="https://aiesec.org" target="_blank" rel="noopener noreferrer">Learn more about AIESEC</a>
+    </footer>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+         <div class="modal-content">
+            <span class="modal-close-btn" id="modal-close-btn" title="Close">&times;</span>
+            <h3 id="edit-modal-title">Edit Details</h3>
+            <input type="hidden" id="edit-media-id">
+            <input type="hidden" id="edit-media-kind">
+             <div class="form-group"> <label for="edit-media-title" id="edit-media-title-label">Title / Caption</label> <input type="text" id="edit-media-title" placeholder="Enter title or caption"> </div>
+             <div class="form-group"> <label for="edit-media-tags">Tags (comma-sep.)</label> <input type="text" id="edit-media-tags" placeholder="e.g., gv, brazil, marketing"> </div>
+             <div class="modal-actions"> <button id="modal-cancel-btn" class="cancel-btn">Cancel</button> <button id="modal-save-btn" class="save-btn">Save Changes</button> </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Constants and DOM Elements ---
+        const body = document.body;
+        const videoWallContainer = document.getElementById('video-wall-container');
+        const photoWallContainer = document.getElementById('photo-wall-container');
+        const opportunitiesViewContainer = document.getElementById('opportunities-view-container'); // Corrected ID
+        const viewContainers = [videoWallContainer, photoWallContainer, opportunitiesViewContainer]; // Array of view containers
+
+        const videoWall = document.getElementById('video-wall');
+        const photoWall = document.getElementById('photo-wall');
+        const videoWallStatus = document.getElementById('video-wall-status');
+        const photoWallStatus = document.getElementById('photo-wall-status');
+
+        const controlsContainer = document.getElementById('controls-container'); // Select the new controls wrapper
+        const addMediaSection = controlsContainer.querySelector('.add-media-section');
+        const controlsSection = controlsContainer.querySelector('.controls-section'); // Search/Sort
+        const filterSection = controlsContainer.querySelector('.filter-section');
+
+        const addMediaTitle = document.getElementById('add-media-title');
+        const mediaUrlLabel = document.getElementById('media-url-label');
+        const mediaUrlInput = document.getElementById('media-url');
+        const photoUrlHint = document.getElementById('photo-url-hint');
+        const mediaTypeSelect = document.getElementById('media-type');
+        const mediaTitleLabel = document.getElementById('media-title-label');
+        const mediaTitleInput = document.getElementById('media-title-override');
+        const mediaTagsInput = document.getElementById('media-tags');
+        const addMediaBtn = document.getElementById('add-media-btn');
+        const fetchTitleBtn = document.getElementById('fetch-title-btn');
+        const formFeedback = document.getElementById('form-feedback');
+
+        const searchInput = document.getElementById('search-input');
+        const searchTargetLabel = document.querySelector('.search-target-label');
+        const sortOptions = document.getElementById('sort-options');
+        const filterControls = document.getElementById('filter-controls');
+        const filterTargetLabel = document.querySelector('.filter-target-label');
+        const customFiltersContainer = document.getElementById('custom-filters');
+        const customTagsPlaceholder = document.getElementById('custom-tags-placeholder');
+
+        const viewSelector = document.querySelector('.view-selector');
+        const currentViewFilterLabel = document.getElementById('current-view-filter-label');
+        const currentViewHelpLabel = document.getElementById('current-view-help-label');
+
+        const focusModeToggle = document.getElementById('focus-mode-toggle');
+        const helpToggleBtn = document.getElementById('help-toggle-btn');
+        const helpPanel = document.getElementById('filter-help-panel');
+        const helpPanelCloseBtn = document.getElementById('help-panel-close-btn');
+
+        const editModal = document.getElementById('edit-modal');
+        const editModalTitle = document.getElementById('edit-modal-title');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        const editMediaIdInput = document.getElementById('edit-media-id');
+        const editMediaKindInput = document.getElementById('edit-media-kind');
+        const editMediaTitleInput = document.getElementById('edit-media-title');
+        const editMediaTitleLabel = document.getElementById('edit-media-title-label');
+        const editMediaTagsInput = document.getElementById('edit-media-tags');
+
+        const opportunitiesFrame = document.getElementById('opportunities-frame');
+        const opportunitiesFallback = document.getElementById('opportunities-fallback');
+
+        // Local Storage Keys & State
+        const LS_VIDEOS_KEY = 'aiesecBenakEpVideos_v5';
+        const LS_PHOTOS_KEY = 'aiesecBenakEpPhotos_v1';
+        let currentView = 'video-wall-container';
+        let currentSubView = 'algeria-outgoing';
+        let allVideos = [];
+        let allPhotos = [];
+
+        // --- Utility Functions (Keep from previous version) ---
+        function extractYouTubeId(url) { if (!url) return null; if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url; const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/; const match = url.match(regex); return match ? match[1] : null; }
+        function parseTags(tagsString) { if (!tagsString) return []; return [...new Set( tagsString.split(',').map(tag => tag.trim().toLowerCase().replace(/\s+/g, '-')).filter(tag => tag !== '') )]; }
+        function getTagType(tag) { const programs = ['gv', 'gt', 'gta']; if (programs.includes(tag)) return 'program'; if (tag === 'algeria-outgoing' || tag === 'host-country-experience') return 'subview-type'; return 'custom'; }
+        function generateUniqueId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 5); }
+        function debounce(func, wait) { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func(...args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; }
+        function showFeedback(message, type = 'error', duration = null) { formFeedback.textContent = message; formFeedback.className = `form-feedback show ${type}`; const defaultDuration = type === 'success' ? 3000 : 5000; const displayDuration = duration !== null ? duration : defaultDuration; if (displayDuration > 0) { setTimeout(() => { formFeedback.classList.remove('show'); setTimeout(() => { if (!formFeedback.classList.contains('show')) { formFeedback.textContent = ''; formFeedback.className = 'form-feedback'; } }, 500); }, displayDuration); } }
+        async function fetchYouTubeTitle(youtubeId) { if (!youtubeId) return null; const url = `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${youtubeId}`; try { showFeedback('Fetching title...', 'info', 0); const response = await fetch(url); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const data = await response.json(); showFeedback('', ''); return data.title || null; } catch (error) { console.error("Error fetching YouTube title:", error); showFeedback('Could not fetch title automatically.', 'warning'); return null; } finally { if (formFeedback.textContent === 'Fetching title...') { setTimeout(() => { if (formFeedback.textContent === 'Fetching title...') showFeedback('', ''); }, 100); } } }
+        function isValidImageUrl(url) { return /\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(url); }
+
+
+        // --- Local Storage & State Management (Keep from previous) ---
+        function loadMediaFromStorage() { allVideos = loadItems(LS_VIDEOS_KEY, mapVideo); allPhotos = loadItems(LS_PHOTOS_KEY, mapPhoto); }
+        function loadItems(key, mapper) { const initialItems = []; const wallStatusEl = key === LS_VIDEOS_KEY ? videoWallStatus : photoWallStatus; setWallStatus(wallStatusEl, 'Loading...', true); try { const storedItems = localStorage.getItem(key); let parsedItems = initialItems; if (storedItems) { const parsed = JSON.parse(storedItems); if (Array.isArray(parsed)) { parsedItems = parsed.map(mapper); } } setWallStatus(wallStatusEl, '', false); return parsedItems; } catch (e) { console.error(`Error loading from ${key}:`, e); setWallStatus(wallStatusEl, 'Error loading items.', false); return []; } }
+        const mapVideo = v => ({ id: v.id || generateUniqueId(), youtubeId: v.youtubeId || v.id, title: v.title || `Video ${v.youtubeId || v.id}`, tags: Array.isArray(v.tags) ? [...new Set(v.tags)] : [], type: v.type === 'incoming-to-algeria' ? 'host-country-experience' : (v.type || 'algeria-outgoing'), addedAt: v.addedAt || Date.now() });
+        const mapPhoto = p => ({ id: p.id || generateUniqueId(), imageUrl: p.imageUrl || '', title: p.title || 'EP Photo', tags: Array.isArray(p.tags) ? [...new Set(p.tags)] : [], type: p.type || 'algeria-outgoing', addedAt: p.addedAt || Date.now() });
+        function saveItems(key, items) { try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) { console.error(`Error saving to ${key}:`, e); showFeedback("Could not save item list.", 'error'); } }
+        function addItem(kind, newItem) { const items = kind === 'video' ? allVideos : allPhotos; const key = kind === 'video' ? LS_VIDEOS_KEY : LS_PHOTOS_KEY; const idKey = kind === 'video' ? 'youtubeId' : 'imageUrl'; const idValue = kind === 'video' ? newItem.youtubeId : newItem.imageUrl; if (items.some(item => item[idKey] === idValue)) { showFeedback(`${kind === 'video' ? 'Video' : 'Image'} with this ${idKey === 'youtubeId' ? 'ID' : 'URL'} already exists.`, 'error'); return false; } items.push(newItem); saveItems(key, items); return true; }
+        function updateItem(kind, updatedItem) { const items = kind === 'video' ? allVideos : allPhotos; const key = kind === 'video' ? LS_VIDEOS_KEY : LS_PHOTOS_KEY; const index = items.findIndex(item => item.id === updatedItem.id); if (index !== -1) { items[index] = updatedItem; saveItems(key, items); return true; } return false; }
+        function removeItem(kind, itemId) { let items = kind === 'video' ? allVideos : allPhotos; const key = kind === 'video' ? LS_VIDEOS_KEY : LS_PHOTOS_KEY; const initialLength = items.length; items = items.filter(item => item.id !== itemId); if (items.length < initialLength) { if (kind === 'video') allVideos = items; else allPhotos = items; saveItems(key, items); return true; } return false; }
+
+        // --- Rendering Functions (Keep renderVideoItem, renderPhotoItem, renderActiveWall, updateFilterOptions from previous) ---
+        function setWallStatus(wallStatusEl, message, isLoading = false) { const wallEl = wallStatusEl === videoWallStatus ? videoWall : photoWall; wallEl.innerHTML = ''; const textEl = wallStatusEl.querySelector('.wall-status-text'); const loaderEl = wallStatusEl.querySelector('.loader'); textEl.textContent = message; loaderEl.classList.toggle('hidden', !isLoading); wallStatusEl.classList.toggle('show', !!message || isLoading); }
+        function renderVideoItem(video) { const videoItem = document.createElement('div'); videoItem.className = 'video-item'; videoItem.dataset.id = video.id; let typeText = video.type === 'algeria-outgoing' ? 'Algerian EP' : 'Host Country Exp.'; let tagsHTML = `<span class="tag" data-tag-value="${video.type}" title="Experience Type">${typeText}</span>`; video.tags.forEach(tag => { const tagType = getTagType(tag); if (tagType === 'program' || tagType === 'custom') { tagsHTML += `<span class="tag clickable-tag" data-tag-type="${tagType}" data-tag-value="${tag}" title="Filter by '${tag}'">${tag}</span>`; } }); videoItem.innerHTML = `<div class="video-embed-container"><iframe loading="lazy" src="https://www.youtube.com/embed/${video.youtubeId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${video.title || 'EP Experience'}"></iframe></div><div class="video-info"><h4>${video.title || `YT: ${video.youtubeId}`}</h4><div class="video-tags">${tagsHTML}</div><div class="video-actions"><button class="edit-btn" title="Edit Video">✏️ Edit</button><button class="delete-btn" title="Delete Video">🗑️ Delete</button></div></div>`; videoItem.querySelector('.edit-btn').addEventListener('click', () => handleEditMedia('video', video.id)); videoItem.querySelector('.delete-btn').addEventListener('click', () => handleDeleteMedia('video', video.id)); videoWall.appendChild(videoItem); }
+        function renderPhotoItem(photo) { const photoItem = document.createElement('div'); photoItem.className = 'photo-item'; photoItem.dataset.id = photo.id; let typeText = photo.type === 'algeria-outgoing' ? 'Algerian EP' : 'Host Country Exp.'; let tagsHTML = `<span class="tag" data-tag-value="${photo.type}" title="Experience Type">${typeText}</span>`; photo.tags.forEach(tag => { const tagType = getTagType(tag); if (tagType === 'program' || tagType === 'custom') { tagsHTML += `<span class="tag clickable-tag" data-tag-type="${tagType}" data-tag-value="${tag}" title="Filter by '${tag}'">${tag}</span>`; } }); const img = new Image(); img.loading = 'lazy'; img.alt = photo.title || 'AIESEC EP Experience Photo'; img.onerror = () => { img.alt = `Error loading: ${photo.title || 'Image'}`; img.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10">Load Error</text></svg>'; }; img.src = photo.imageUrl; photoItem.innerHTML = `<div class="photo-image-container"></div><div class="photo-info"><h5>${photo.title || 'EP Experience Photo'}</h5><div class="photo-tags">${tagsHTML}</div><div class="photo-actions"><button class="edit-btn" title="Edit Photo">✏️ Edit</button><button class="delete-btn" title="Delete Photo">🗑️ Delete</button></div></div>`; photoItem.querySelector('.photo-image-container').appendChild(img); photoItem.querySelector('.edit-btn').addEventListener('click', () => handleEditMedia('photo', photo.id)); photoItem.querySelector('.delete-btn').addEventListener('click', () => handleDeleteMedia('photo', photo.id)); photoWall.appendChild(photoItem); }
+        function renderActiveWall(itemsToRender, kind = 'video') { const wallEl = kind === 'video' ? videoWall : photoWall; const wallStatusEl = kind === 'video' ? videoWallStatus : photoWallStatus; const renderFn = kind === 'video' ? renderVideoItem : renderPhotoItem; wallEl.innerHTML = ''; wallStatusEl.classList.remove('show'); if (itemsToRender.length === 0) { const searchTerm = searchInput.value.trim(); const hasActiveFilters = filterControls.querySelectorAll('input[type="checkbox"]:checked').length > 0; const targetLabel = kind === 'video' ? 'Videos' : 'Photos'; let emptyMessage = `No ${targetLabel.toLowerCase()} found for the current view/filters.`; setWallStatus(wallStatusEl, emptyMessage, false); } else { itemsToRender.forEach(renderFn); } }
+        function updateFilterOptions(kind = 'video') { const items = (kind === 'video' ? allVideos : allPhotos); const relevantItems = kind === 'video' ? items.filter(v => v.type === currentSubView) : items; const customTags = new Set(); relevantItems.forEach(item => { item.tags.forEach(tag => { if (getTagType(tag) === 'custom') customTags.add(tag); }); }); const existingFilters = customFiltersContainer.querySelectorAll('div:not(#custom-tags-placeholder)'); existingFilters.forEach(el => el.remove()); const sortedTags = Array.from(customTags).sort(); customTagsPlaceholder.style.display = sortedTags.length === 0 ? 'block' : 'none'; customTagsPlaceholder.textContent = sortedTags.length === 0 ? `(No custom tags for these ${kind === 'video' ? 'videos' : 'photos'} yet)` : ''; sortedTags.forEach(tag => { const filterId = `filter-custom-${tag.replace(/[^a-zA-Z0-9]/g, '')}`; if (document.getElementById(filterId)) return; const checkboxDiv = document.createElement('div'); checkboxDiv.innerHTML = `<input type="checkbox" id="${filterId}" value="${tag}" data-filter-type="custom"><label for="${filterId}">${tag.charAt(0).toUpperCase() + tag.slice(1)}</label>`; checkboxDiv.querySelector('input').addEventListener('change', handleFilterChange); customFiltersContainer.appendChild(checkboxDiv); }); const programFilterGroup = filterControls.querySelector('fieldset:has(#filter-gv)'); if (programFilterGroup) { programFilterGroup.style.display = (kind === 'video' || kind === 'photo') ? 'flex' : 'none'; } }
+
+        // --- Event Handlers (Keep handleFetchTitleClick, handleDeleteMedia, handleEditMedia, handleSaveEdit, closeEditModal, handleFilterChange, handleTagClick from previous) ---
+        async function handleAddMedia() { formFeedback.classList.remove('show'); const urlValue = mediaUrlInput.value.trim(); const tagsValue = mediaTagsInput.value.trim(); let titleValue = mediaTitleInput.value.trim(); const selectedMediaType = mediaTypeSelect.value; const tags = parseTags(tagsValue); const kind = currentView === 'video-wall-container' ? 'video' : 'photo'; if (!urlValue) { showFeedback(`Please enter a ${kind === 'video' ? 'YouTube URL/ID' : 'Direct Image URL'}.`, 'error'); return; } let newItemData = { id: generateUniqueId(), tags: tags, type: selectedMediaType, addedAt: Date.now() }; let success = false; if (kind === 'video') { const youtubeId = extractYouTubeId(urlValue); if (!youtubeId) { showFeedback('Invalid YouTube URL/ID.', 'error'); return; } if (!titleValue) { const fetchedTitle = await fetchYouTubeTitle(youtubeId); titleValue = fetchedTitle || `AIESEC Video (${youtubeId})`; mediaTitleInput.value = titleValue; } newItemData = { ...newItemData, youtubeId: youtubeId, title: titleValue }; success = addItem('video', newItemData); } else { if (!isValidImageUrl(urlValue)) { showFeedback('Please use a direct image URL (.jpg, .png, etc.)', 'error', 7000); return; } newItemData = { ...newItemData, imageUrl: urlValue, title: titleValue || 'EP Experience Photo' }; success = addItem('photo', newItemData); } if (success) { showFeedback(`${kind === 'video' ? 'Video' : 'Photo'} added!`, 'success'); mediaUrlInput.value = ''; mediaTagsInput.value = ''; mediaTitleInput.value = ''; applyFiltersAndRender(); updateFilterOptions(kind); } }
+        async function handleFetchTitleClick() { if (currentView !== 'video-wall-container') return; formFeedback.classList.remove('show'); const urlValue = mediaUrlInput.value.trim(); const youtubeId = extractYouTubeId(urlValue); if (!youtubeId) { showFeedback('Enter valid YT URL/ID.', 'error'); return; } const fetchedTitle = await fetchYouTubeTitle(youtubeId); if (fetchedTitle) { mediaTitleInput.value = fetchedTitle; showFeedback('Title fetched!', 'success'); } }
+        function handleDeleteMedia(kind, itemId) { if (!confirm(`Delete this ${kind}?`)) return; if (removeItem(kind, itemId)) { applyFiltersAndRender(); updateFilterOptions(kind); } else { showFeedback(`Error deleting ${kind}.`, 'error'); } }
+        function handleEditMedia(kind, itemId) { const items = kind === 'video' ? allVideos : allPhotos; const itemToEdit = items.find(item => item.id === itemId); if (!itemToEdit) { alert(`Error: ${kind} not found.`); return; } editMediaIdInput.value = itemToEdit.id; editMediaKindInput.value = kind; editMediaTitleInput.value = itemToEdit.title; editMediaTagsInput.value = itemToEdit.tags.join(', '); editModalTitle.textContent = `Edit ${kind === 'video' ? 'Video' : 'Photo'} Details`; editMediaTitleLabel.textContent = kind === 'video' ? 'Video Title' : 'Photo Caption / Title'; editModal.classList.add('active'); }
+        function handleSaveEdit() { const itemId = editMediaIdInput.value; const kind = editMediaKindInput.value; const newTitle = editMediaTitleInput.value.trim(); const newTagsString = editMediaTagsInput.value.trim(); const newTags = parseTags(newTagsString); if (!itemId || !kind) { alert('Error: Cannot save changes.'); return; } const items = kind === 'video' ? allVideos : allPhotos; const itemToUpdate = items.find(item => item.id === itemId); if (!itemToUpdate) { alert(`Error: ${kind} not found.`); return; } const updatedItem = { ...itemToUpdate, title: newTitle || (kind === 'video' ? `Experience (${itemToUpdate.youtubeId})` : 'EP Photo'), tags: newTags }; if (updateItem(kind, updatedItem)) { closeEditModal(); applyFiltersAndRender(); updateFilterOptions(kind); } else { alert('Error saving changes.'); } }
+        function closeEditModal() { editModal.classList.remove('active'); }
+        function handleFilterChange() { applyFiltersAndRender(); }
+        function handleTagClick(event) { const wall = event.target.closest('#video-wall, #photo-wall'); if (!wall || !event.target.classList.contains('clickable-tag')) return; const tagValue = event.target.dataset.tagValue; const tagType = event.target.dataset.tagType; let checkboxId = tagType === 'program' ? `filter-${tagValue}` : `filter-custom-${tagValue.replace(/[^a-zA-Z0-9]/g, '')}`; const checkbox = document.getElementById(checkboxId); if (checkbox) { checkbox.checked = !checkbox.checked; handleFilterChange(); } else { console.warn(`Checkbox not found for tag: ${tagValue}`); } }
+
+        // --- Core Logic: Apply Filters, Sort, and Render (Keep from previous) ---
+        function applyFiltersAndRender() {
+             const kind = currentView === 'video-wall-container' ? 'video' : 'photo';
+             const items = kind === 'video' ? allVideos : allPhotos;
+             const wallStatusEl = kind === 'video' ? videoWallStatus : photoWallStatus;
+             setWallStatus(wallStatusEl, 'Applying filters...', true);
+             setTimeout(() => {
+                 const searchTerm = searchInput.value.trim().toLowerCase();
+                 const sortBy = sortOptions.value;
+                 let filteredItems = [];
+                 if (kind === 'video') { filteredItems = items.filter(video => video.type === currentSubView); }
+                 else { filteredItems = [...items]; } // Photos: show all types for now
+                 if (searchTerm) { filteredItems = filteredItems.filter(item => item.title.toLowerCase().includes(searchTerm) || item.tags.some(tag => tag.toLowerCase().includes(searchTerm))); }
+                 const activeFilters = { program: [], custom: [] };
+                 const checkedCheckboxes = filterControls.querySelectorAll('input[type="checkbox"]:checked');
+                 checkedCheckboxes.forEach(checkbox => { const filterType = checkbox.dataset.filterType; if (activeFilters[filterType]) activeFilters[filterType].push(checkbox.value); });
+                 const hasTagFilters = Object.values(activeFilters).some(arr => arr.length > 0);
+                 if (hasTagFilters) { filteredItems = filteredItems.filter(item => Object.keys(activeFilters).every(filterType => { const selectedTags = activeFilters[filterType]; if (selectedTags.length === 0) return true; return item.tags.some(tag => selectedTags.includes(tag)); })); }
+                 switch (sortBy) { case 'oldest': filteredItems.sort((a, b) => a.addedAt - b.addedAt); break; case 'title_asc': filteredItems.sort((a, b) => a.title.localeCompare(b.title)); break; case 'title_desc': filteredItems.sort((a, b) => b.title.localeCompare(a.title)); break; default: filteredItems.sort((a, b) => b.addedAt - a.addedAt); break; }
+                 renderActiveWall(filteredItems, kind);
+             }, 50);
+         }
+
+        // --- UPDATED View & Mode Switching ---
+         function switchView(newViewId, newSubView = null) {
+             // Don't switch if already active
+             if (newViewId === currentView && newSubView === currentSubView) return;
+
+             console.log(`Switching view to: ${newViewId}, SubView: ${newSubView}`); // Debug log
+
+             currentView = newViewId;
+             // Only update subview if the main view is the video container
+             if (newViewId === 'video-wall-container') {
+                currentSubView = newSubView;
+             } else {
+                 currentSubView = null; // Reset subview if not on video wall
+             }
+
+
+             // Update Active Button in Selector
+             viewSelector.querySelectorAll('button').forEach(btn => {
+                 const buttonViewId = btn.dataset.view;
+                 const buttonSubView = btn.dataset.subview || null;
+                 // Active if view matches, AND (if subview exists) subview matches
+                 const isActive = (buttonViewId === newViewId) && (buttonSubView === currentSubView || !currentSubView && !buttonSubView);
+                 btn.classList.toggle('active', isActive);
+             });
+
+             // Show/Hide View Containers
+             viewContainers.forEach(container => {
+                 container.classList.toggle('active', container.id === newViewId);
+             });
+
+             // Show/Hide Controls Container
+             const showControls = (newViewId === 'video-wall-container' || newViewId === 'photo-wall-container');
+             controlsContainer.classList.toggle('hidden', !showControls);
+
+
+             // Adapt UI Elements for Current View
+             const isVideoView = newViewId === 'video-wall-container';
+             const isPhotoView = newViewId === 'photo-wall-container';
+             const isOpportunitiesView = newViewId === 'opportunities-view-container'; // Use correct ID
+             const kind = isVideoView ? 'video' : (isPhotoView ? 'photo' : null);
+
+             // Enable/Disable Focus Mode Toggle
+             focusModeToggle.disabled = !isVideoView;
+             if (!isVideoView && body.classList.contains('focus-mode-active')) {
+                 toggleFocusMode(); // Exit focus mode if switching away
+             }
+             // Close help panel when switching views
+             if (helpPanel.classList.contains('active')) {
+                 toggleHelpPanel();
+             }
+
+             if (kind) { // Video or Photo view active
+                 // Adapt Add Form
+                addMediaTitle.textContent = `Add New EP ${isVideoView ? 'Video' : 'Photo'}`;
+                mediaUrlLabel.textContent = isVideoView ? 'YouTube URL or ID' : 'Direct Image URL';
+                mediaTitleLabel.textContent = isVideoView ? 'Video Title' : 'Photo Caption/Title';
+                fetchTitleBtn.style.display = isVideoView ? '' : 'none';
+                photoUrlHint.classList.toggle('hidden', isVideoView);
+                addMediaBtn.textContent = `Add ${isVideoView ? 'Video' : 'Photo'}`;
+                mediaTypeSelect.value = currentSubView || 'algeria-outgoing'; // Default type based on subview
+
+                // Adapt Search/Filter Labels
+                const targetLabelContent = isVideoView ? 'Videos' : 'Photos';
+                searchTargetLabel.textContent = targetLabelContent;
+                filterTargetLabel.textContent = targetLabelContent;
+                currentViewFilterLabel.textContent = isVideoView
+                    ? (currentSubView === 'algeria-outgoing' ? 'Algerian EPs Abroad' : 'Host Country Videos')
+                    : 'EP Photos';
+                currentViewHelpLabel.textContent = targetLabelContent;
+
+                // Reset controls and render
+                searchInput.value = '';
+                filterControls.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                sortOptions.value = 'newest';
+                updateFilterOptions(kind);
+                applyFiltersAndRender();
+             } else if (isOpportunitiesView) {
+                // Handle iframe (ensure fallback check runs)
+                 setTimeout(checkIframeBlocked, 500); // Check after a brief delay
+             }
+         }
+
+         // Check if iframe content is blocked
+         function checkIframeBlocked() {
+             try {
+                 // Attempt to access contentDocument. If it fails due to cross-origin policy, it's blocked.
+                 // If it succeeds but body is empty/inaccessible, it might also indicate blocking or loading issues.
+                 const isBlocked = !opportunitiesFrame.contentDocument || !opportunitiesFrame.contentDocument.body || opportunitiesFrame.contentDocument.body.childNodes.length === 0;
+                 opportunitiesFallback.classList.toggle('hidden', !isBlocked);
+             } catch (e) {
+                 // Access denied - definitely blocked
+                 opportunitiesFallback.classList.remove('hidden');
+                 console.warn("Cannot access iframe content - likely blocked by X-Frame-Options or CSP.");
+             }
+         }
+
+
+        function toggleFocusMode() { /* Keep from previous */ body.classList.toggle('focus-mode-active'); const isFocusActive = body.classList.contains('focus-mode-active'); focusModeToggle.title = isFocusActive ? 'Disable Focus Mode' : 'Enable Focus Mode'; focusModeToggle.innerHTML = isFocusActive ? '<span class="icon-focus-off"></span>' : '<span class="icon-focus-on"></span>'; if (isFocusActive && helpPanel.classList.contains('active')) { toggleHelpPanel(); } }
+        function toggleHelpPanel() { /* Keep from previous */ helpPanel.classList.toggle('active'); }
+
+        // --- Debounced search handler (Keep from previous) ---
+        const debouncedSearch = debounce(applyFiltersAndRender, 300);
+
+        // --- Initialization ---
+        function initializeApp() {
+            console.log("Initializing App..."); // Debug log
+            loadMediaFromStorage();
+
+            // Initial View Setup (Default: Algerian EP Videos)
+            switchView('video-wall-container', 'algeria-outgoing');
+
+            // Event Listeners
+            addMediaBtn.addEventListener('click', handleAddMedia);
+            fetchTitleBtn.addEventListener('click', handleFetchTitleClick);
+
+            // View Selector Buttons (Using Delegation)
+            viewSelector.addEventListener('click', (event) => {
+                const button = event.target.closest('button'); // Find the clicked button
+                if (button) {
+                    const viewId = button.dataset.view;
+                    const subView = button.dataset.subview || null;
+                    console.log(`Button Clicked: view=${viewId}, subview=${subView}`); // Debug log
+                    switchView(viewId, subView);
+                }
+            });
+
+            focusModeToggle.addEventListener('click', toggleFocusMode);
+            helpToggleBtn.addEventListener('click', toggleHelpPanel);
+            helpPanelCloseBtn.addEventListener('click', toggleHelpPanel);
+            searchInput.addEventListener('input', debouncedSearch);
+            sortOptions.addEventListener('change', applyFiltersAndRender);
+
+            filterControls.addEventListener('change', (event) => { if (event.target.matches('input[type="checkbox"]')) handleFilterChange(); });
+            videoWall.addEventListener('click', handleTagClick);
+            photoWall.addEventListener('click', handleTagClick);
+
+            modalCloseBtn.addEventListener('click', closeEditModal);
+            modalCancelBtn.addEventListener('click', closeEditModal);
+            modalSaveBtn.addEventListener('click', handleSaveEdit);
+            editModal.addEventListener('click', (event) => { if (event.target === editModal) closeEditModal(); });
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && editModal.classList.contains('active')) closeEditModal(); });
+
+            // Initial Render (handled by switchView)
+             console.log("App Initialized.");
+        }
+
+        // Run initialization
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+
+</body>
+</html>
