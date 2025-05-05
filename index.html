@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIESEC in Benak - EP Experience Hub (Fixed)</title>
+    <title>AIESEC in Benak - EP Experience Hub (Online DB)</title>
     <style>
         /* --- Base & Variables --- */
         :root {
@@ -18,9 +18,25 @@
             --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.15);
             --transition-speed: 0.3s;
             /* --- WALL BACKGROUND --- */
-            /* !!! REPLACE THIS URL !!! */
             --wall-texture-url: 'https://www.transparenttextures.com/patterns/concrete-wall.png'; /* Placeholder */
             --wall-fallback-color: #d8d8d8;
+            /* --- IMPROVED COLORS --- */
+            --edit-button-bg: #e0f2fe; /* Lighter blue */
+            --edit-button-border: #7dd3fc;
+            --edit-button-text: #075985;
+            --edit-button-hover-bg: #bae6fd;
+            --delete-button-bg: #fee2e2; /* Lighter red */
+            --delete-button-border: #fca5a5;
+            --delete-button-text: #991b1b;
+            --delete-button-hover-bg: #fecaca;
+            --tag-program-bg: #ffedd5; /* Light orange */
+            --tag-program-border: var(--aiesec-orange);
+            --tag-program-text: #9a3412;
+            --tag-custom-bg: #e0f2fe; /* Light blue */
+            --tag-custom-border: var(--aiesec-blue);
+            --tag-custom-text: #0c4a6e;
+            --tag-hover-bg: #d1d5db; /* Neutral gray */
+            --tag-hover-text: #1f2937;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -113,10 +129,71 @@
         .video-info { padding: 0.8rem 1rem; flex-grow: 1; display: flex; flex-direction: column; background-color: #fdfdfd; }
         .video-info h4 { margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--aiesec-blue); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .video-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-        .tag { background-color: #e9e9e9; color: #555; padding: 0.2rem 0.6rem; border-radius: 3px; font-size: 0.8rem; border: 1px solid #ccc; cursor: pointer; transition: all var(--transition-speed); }
+        /* --- MODIFIED: Tag Styles --- */
+        .tag {
+            background-color: #e9e9e9; /* Default background */
+            color: #555; /* Default text */
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px; /* More rounded */
+            font-size: 0.8rem;
+            border: 1px solid #ccc; /* Default border */
+            transition: all var(--transition-speed);
+            line-height: 1.2; /* Adjust line height slightly */
+        }
+        .tag.clickable-tag {
+            cursor: pointer;
+        }
+        /* Style specific tag types */
+        .tag[data-tag-type="program"] {
+            background-color: var(--tag-program-bg);
+            border-color: var(--tag-program-border);
+            color: var(--tag-program-text);
+            font-weight: 500; /* Slightly bolder */
+        }
+        .tag[data-tag-type="custom"] {
+             background-color: var(--tag-custom-bg);
+             border-color: var(--tag-custom-border);
+             color: var(--tag-custom-text);
+        }
+        /* Hover effect for clickable tags */
+        .tag.clickable-tag:hover {
+            background-color: var(--tag-hover-bg);
+            color: var(--tag-hover-text);
+            border-color: #9ca3af;
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+        /* --- END MODIFIED: Tag Styles --- */
         .video-actions { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--border-light); margin-left: -1rem; margin-right: -1rem; margin-bottom: -0.8rem; padding: 0.6rem 1rem; background-color: #f8f8f8; }
-        .video-actions button { background: #eee; color: #555; border: 1px solid #ccc; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; line-height: 1; }
-        .video-actions button:hover { background: #ddd; border-color: #bbb; }
+        /* --- MODIFIED: Video Action Button Styles --- */
+        .video-actions button {
+            border: 1px solid transparent; /* Base border */
+            border-radius: 4px;
+            padding: 5px 9px; /* Slightly adjusted padding */
+            cursor: pointer;
+            font-size: 0.9rem; /* Slightly larger font */
+            line-height: 1;
+            transition: all var(--transition-speed);
+        }
+        .video-actions .edit-btn {
+            background-color: var(--edit-button-bg);
+            border-color: var(--edit-button-border);
+            color: var(--edit-button-text);
+        }
+        .video-actions .delete-btn {
+            background-color: var(--delete-button-bg);
+            border-color: var(--delete-button-border);
+            color: var(--delete-button-text);
+        }
+        .video-actions .edit-btn:hover {
+            background-color: var(--edit-button-hover-bg);
+            box-shadow: var(--shadow-sm);
+        }
+        .video-actions .delete-btn:hover {
+            background-color: var(--delete-button-hover-bg);
+            box-shadow: var(--shadow-sm);
+        }
+        /* --- END MODIFIED: Video Action Button Styles --- */
 
         /* === Photo Wall & Items === */
         #photo-wall { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; padding: 1.5rem 0.5rem; }
@@ -126,9 +203,37 @@
         .photo-info { padding: 0.6rem 0.8rem; flex-grow: 1; display: flex; flex-direction: column; background-color: #fdfdfd; }
         .photo-info h5 { margin-bottom: 0.4rem; font-size: 1rem; color: var(--text-dark); font-weight: normal; line-height: 1.3; max-height: 3.9em; overflow: hidden; text-overflow: ellipsis; }
         .photo-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+        /* Note: Photo tags will inherit the modified .tag styles */
         .photo-actions { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--border-light); margin: 0.6rem -0.8rem -0.6rem; padding: 0.5rem 0.8rem; background-color: #f8f8f8; }
-        .photo-actions button { background: #eee; color: #555; border: 1px solid #ccc; border-radius: 3px; padding: 3px 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; }
-        .photo-actions button:hover { background: #ddd; border-color: #bbb; }
+         /* --- MODIFIED: Photo Action Button Styles --- */
+         .photo-actions button {
+            border: 1px solid transparent; /* Base border */
+            border-radius: 4px;
+            padding: 4px 7px; /* Slightly adjusted padding */
+            cursor: pointer;
+            font-size: 0.85rem; /* Slightly larger font */
+            line-height: 1;
+            transition: all var(--transition-speed);
+        }
+        .photo-actions .edit-btn {
+            background-color: var(--edit-button-bg);
+            border-color: var(--edit-button-border);
+            color: var(--edit-button-text);
+        }
+        .photo-actions .delete-btn {
+            background-color: var(--delete-button-bg);
+            border-color: var(--delete-button-border);
+            color: var(--delete-button-text);
+        }
+        .photo-actions .edit-btn:hover {
+            background-color: var(--edit-button-hover-bg);
+            box-shadow: var(--shadow-sm);
+        }
+        .photo-actions .delete-btn:hover {
+            background-color: var(--delete-button-hover-bg);
+            box-shadow: var(--shadow-sm);
+        }
+        /* --- END MODIFIED: Photo Action Button Styles --- */
 
 
         /* --- Opportunities View --- */
@@ -151,22 +256,26 @@
 
 
         /* --- Edit Modal --- */
-        .modal { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: var(--modal-bg); align-items: center; justify-content: center; animation: fadeIn 0.3s ease-out; }
+        .modal { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); /* Slightly darker modal bg */ align-items: center; justify-content: center; animation: fadeIn 0.3s ease-out; }
         .modal.active { display: flex; }
         .modal-content { background-color: var(--bg-white); padding: 2.5rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); width: 90%; max-width: 550px; position: relative; animation: slideIn 0.4s ease-out; }
-        .modal-close-btn { position: absolute; top: 15px; right: 20px; font-size: 2rem; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1; }
+        .modal-close-btn { position: absolute; top: 15px; right: 20px; font-size: 2rem; font-weight: bold; color: #aaa; cursor: pointer; line-height: 1; transition: color 0.2s; }
+        .modal-close-btn:hover { color: #666; }
         .modal h3 { color: var(--aiesec-blue); margin-bottom: 1.8rem; font-size: 1.6rem; text-align: center; }
         .modal .form-group { margin-bottom: 1.2rem; }
         .modal-actions { text-align: right; margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.8rem; }
-        .modal-actions button { padding: 0.7rem 1.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; font-size: 1rem; }
+        .modal-actions button { padding: 0.7rem 1.5rem; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; font-size: 1rem; transition: background-color 0.2s, box-shadow 0.2s; }
         .modal-actions .save-btn { background-color: #28a745; color: white; }
+        .modal-actions .save-btn:hover { background-color: #218838; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .modal-actions .cancel-btn { background-color: #ccc; color: #333; }
+        .modal-actions .cancel-btn:hover { background-color: #b3b3b3; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideIn { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         /* --- Footer --- */
         footer { text-align: center; padding: 1.5rem; margin-top: 3rem; background-color: rgba(51, 51, 51, 0.85); color: #e0e0e0; font-size: 0.95rem; border-top: 1px solid rgba(255,255,255,0.1); }
         footer a { color: var(--aiesec-orange); text-decoration: none; }
+        footer a:hover { text-decoration: underline; } /* Added hover effect */
 
         /* --- Utility & Responsive --- */
         .hidden { display: none; }
@@ -177,12 +286,25 @@
              .view-selector { gap: 0.3rem; padding: 0.5rem; }
              .container-section { padding: 1rem; margin-bottom: 1rem; }
              #video-wall, #photo-wall { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; padding: 1rem 0.2rem; }
+             /* --- MODIFIED: Ensure button styles adapt --- */
              .video-actions, .photo-actions { padding: 0.5rem 0.8rem; gap: 0.4rem; }
+             .video-actions button { font-size: 0.85rem; padding: 4px 7px; }
+             .photo-actions button { font-size: 0.8rem; padding: 3px 6px; }
+             /* --- END MODIFIED --- */
              .filter-help-panel { width: 280px; }
              #opportunities-view-container { height: calc(100vh - 120px); }
         }
-
+        /* Basic styling for config warning */
+        #firebase-config-warning { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; padding: 1rem; margin: 1rem; border-radius: 4px; text-align: center; font-weight: bold; }
+        #firebase-config-warning code { background-color: #e9ecef; padding: 0.2em 0.4em; border-radius: 3px; }
     </style>
+
+    <!-- ==== ADD FIREBASE SDK SCRIPTS ==== -->
+    <!-- Get the latest versions from the Firebase documentation -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- ==================================== -->
+
 </head>
 <body>
     <!-- Header -->
@@ -193,10 +315,15 @@
         </div>
         <div class="header-actions">
             <button id="focus-mode-toggle" title="Toggle Focus Mode (Video Wall)">
-                <span class="icon-focus-on"></span>
+                <span class="icon-focus-on"></span> <!-- Placeholder: Add actual SVG/Font Icon here -->
             </button>
         </div>
     </header>
+
+     <!-- Warning Message if Config is Missing -->
+     <div id="firebase-config-warning" style="display: none;">
+        Firebase is not configured! Please add your Firebase project configuration in the script's <code>firebaseConfig</code> variable. Data will not load or save.
+     </div>
 
     <!-- View Selector -->
     <div class="view-selector">
@@ -300,7 +427,7 @@
          <div class="modal-content">
             <span class="modal-close-btn" id="modal-close-btn" title="Close">&times;</span>
             <h3 id="edit-modal-title">Edit Details</h3>
-            <input type="hidden" id="edit-media-id">
+            <input type="hidden" id="edit-media-id"> <!-- Will store Firestore Document ID -->
             <input type="hidden" id="edit-media-kind">
              <div class="form-group"> <label for="edit-media-title" id="edit-media-title-label">Title / Caption</label> <input type="text" id="edit-media-title" placeholder="Enter title or caption"> </div>
              <div class="form-group"> <label for="edit-media-tags">Tags (comma-sep.)</label> <input type="text" id="edit-media-tags" placeholder="e.g., gv, brazil, marketing"> </div>
@@ -310,7 +437,46 @@
 
 
     <script>
-        // --- Constants and DOM Elements ---
+        // ========================================================================
+        // ==== PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE ====
+        // ========================================================================
+        // Get this from your Firebase project settings > Web apps
+        // IMPORTANT: Keep this secure if your Firestore rules are not public!
+        // For testing (with test mode rules), it's okay here temporarily.
+        const firebaseConfig = {
+        
+			apiKey: "AIzaSyCxIu0cj4ChS2rhD8a5K1TwqKITP4W7wTo",
+		    authDomain: "ogxdb-97f44.firebaseapp.com",
+		    projectId: "ogxdb-97f44",
+		    storageBucket: "ogxdb-97f44.firebasestorage.app",
+		    messagingSenderId: "585096299149",
+		    appId: "1:585096299149:web:4ddc63f2bb7209305098c4"
+        };
+        // ========================================================================
+        // ========================================================================
+
+        let db; // Firestore database instance
+        let firebaseInitialized = false;
+
+        try {
+            // Initialize Firebase
+            if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                 console.warn("Firebase config is missing or using placeholder values.");
+                 document.getElementById('firebase-config-warning').style.display = 'block';
+                 throw new Error("Firebase config missing");
+            }
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore(); // Get Firestore instance
+            firebaseInitialized = true;
+            console.log("Firebase Initialized Successfully.");
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            // Show feedback to user that the app might not work
+             showFeedback("Error connecting to database. Features disabled.", 'error', 0); // Persistent error
+        }
+
+
+        // --- Constants and DOM Elements (Mostly unchanged) ---
         const body = document.body;
         const videoWallContainer = document.getElementById('video-wall-container');
         const photoWallContainer = document.getElementById('photo-wall-container');
@@ -370,58 +536,349 @@
         const opportunitiesFrame = document.getElementById('opportunities-frame');
         const opportunitiesFallback = document.getElementById('opportunities-fallback');
 
-        // Local Storage Keys & State
-        const LS_VIDEOS_KEY = 'aiesecBenakEpVideos_v5';
-        const LS_PHOTOS_KEY = 'aiesecBenakEpPhotos_v1';
+        // --- State Management ---
         let currentView = 'video-wall-container';
         let currentSubView = 'algeria-outgoing';
-        let allVideos = [];
-        let allPhotos = [];
+        let allVideos = []; // Holds data fetched from Firestore
+        let allPhotos = []; // Holds data fetched from Firestore
 
-        // --- Utility Functions (Keep from previous version) ---
+        // --- Collections References ---
+        const videosCollection = firebaseInitialized ? db.collection('videos') : null;
+        const photosCollection = firebaseInitialized ? db.collection('photos') : null;
+
+        // --- Utility Functions (Unchanged) ---
         function extractYouTubeId(url) { if (!url) return null; if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url; const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/; const match = url.match(regex); return match ? match[1] : null; }
         function parseTags(tagsString) { if (!tagsString) return []; return [...new Set( tagsString.split(',').map(tag => tag.trim().toLowerCase().replace(/\s+/g, '-')).filter(tag => tag !== '') )]; }
         function getTagType(tag) { const programs = ['gv', 'gt', 'gta']; if (programs.includes(tag)) return 'program'; if (tag === 'algeria-outgoing' || tag === 'host-country-experience') return 'subview-type'; return 'custom'; }
-        function generateUniqueId() { return Date.now().toString(36) + Math.random().toString(36).substring(2, 5); }
+        // generateUniqueId is no longer needed as Firestore provides IDs
         function debounce(func, wait) { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func(...args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; }
         function showFeedback(message, type = 'error', duration = null) { formFeedback.textContent = message; formFeedback.className = `form-feedback show ${type}`; const defaultDuration = type === 'success' ? 3000 : 5000; const displayDuration = duration !== null ? duration : defaultDuration; if (displayDuration > 0) { setTimeout(() => { formFeedback.classList.remove('show'); setTimeout(() => { if (!formFeedback.classList.contains('show')) { formFeedback.textContent = ''; formFeedback.className = 'form-feedback'; } }, 500); }, displayDuration); } }
         async function fetchYouTubeTitle(youtubeId) { if (!youtubeId) return null; const url = `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${youtubeId}`; try { showFeedback('Fetching title...', 'info', 0); const response = await fetch(url); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const data = await response.json(); showFeedback('', ''); return data.title || null; } catch (error) { console.error("Error fetching YouTube title:", error); showFeedback('Could not fetch title automatically.', 'warning'); return null; } finally { if (formFeedback.textContent === 'Fetching title...') { setTimeout(() => { if (formFeedback.textContent === 'Fetching title...') showFeedback('', ''); }, 100); } } }
         function isValidImageUrl(url) { return /\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(url); }
 
 
-        // --- Local Storage & State Management (Keep from previous) ---
-        function loadMediaFromStorage() { allVideos = loadItems(LS_VIDEOS_KEY, mapVideo); allPhotos = loadItems(LS_PHOTOS_KEY, mapPhoto); }
-        function loadItems(key, mapper) { const initialItems = []; const wallStatusEl = key === LS_VIDEOS_KEY ? videoWallStatus : photoWallStatus; setWallStatus(wallStatusEl, 'Loading...', true); try { const storedItems = localStorage.getItem(key); let parsedItems = initialItems; if (storedItems) { const parsed = JSON.parse(storedItems); if (Array.isArray(parsed)) { parsedItems = parsed.map(mapper); } } setWallStatus(wallStatusEl, '', false); return parsedItems; } catch (e) { console.error(`Error loading from ${key}:`, e); setWallStatus(wallStatusEl, 'Error loading items.', false); return []; } }
-        const mapVideo = v => ({ id: v.id || generateUniqueId(), youtubeId: v.youtubeId || v.id, title: v.title || `Video ${v.youtubeId || v.id}`, tags: Array.isArray(v.tags) ? [...new Set(v.tags)] : [], type: v.type === 'incoming-to-algeria' ? 'host-country-experience' : (v.type || 'algeria-outgoing'), addedAt: v.addedAt || Date.now() });
-        const mapPhoto = p => ({ id: p.id || generateUniqueId(), imageUrl: p.imageUrl || '', title: p.title || 'EP Photo', tags: Array.isArray(p.tags) ? [...new Set(p.tags)] : [], type: p.type || 'algeria-outgoing', addedAt: p.addedAt || Date.now() });
-        function saveItems(key, items) { try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) { console.error(`Error saving to ${key}:`, e); showFeedback("Could not save item list.", 'error'); } }
-        function addItem(kind, newItem) { const items = kind === 'video' ? allVideos : allPhotos; const key = kind === 'video' ? LS_VIDEOS_KEY : LS_PHOTOS_KEY; const idKey = kind === 'video' ? 'youtubeId' : 'imageUrl'; const idValue = kind === 'video' ? newItem.youtubeId : newItem.imageUrl; if (items.some(item => item[idKey] === idValue)) { showFeedback(`${kind === 'video' ? 'Video' : 'Image'} with this ${idKey === 'youtubeId' ? 'ID' : 'URL'} already exists.`, 'error'); return false; } items.push(newItem); saveItems(key, items); return true; }
-        function updateItem(kind, updatedItem) { const items = kind === 'video' ? allVideos : allPhotos; const key = kind === 'video' ? LS_VIDEOS_KEY : LS_PHOTOS_KEY; const index = items.findIndex(item => item.id === updatedItem.id); if (index !== -1) { items[index] = updatedItem; saveItems(key, items); return true; } return false; }
-        function removeItem(kind, itemId) { let items = kind === 'video' ? allVideos : allPhotos; const key = kind === 'video' ? LS_VIDEOS_KEY : LS_PHOTOS_KEY; const initialLength = items.length; items = items.filter(item => item.id !== itemId); if (items.length < initialLength) { if (kind === 'video') allVideos = items; else allPhotos = items; saveItems(key, items); return true; } return false; }
+        // --- Firestore Data Management ---
 
-        // --- Rendering Functions (Keep renderVideoItem, renderPhotoItem, renderActiveWall, updateFilterOptions from previous) ---
+        // Fetch items from Firestore
+        async function loadItems(collectionRef, mapper) {
+            if (!firebaseInitialized || !collectionRef) return []; // Don't try if Firebase didn't init
+            const items = [];
+            const wallStatusEl = collectionRef.id === 'videos' ? videoWallStatus : photoWallStatus;
+            setWallStatus(wallStatusEl, 'Loading...', true);
+            try {
+                const querySnapshot = await collectionRef.get();
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Convert Firestore Timestamp to JS Date if necessary (Firestore SDK v8 might do this automatically)
+                    if (data.addedAt && typeof data.addedAt.toDate === 'function') {
+                        data.addedAt = data.addedAt.toDate().getTime(); // Store as milliseconds
+                    } else if (typeof data.addedAt !== 'number') {
+                         data.addedAt = Date.now(); // Fallback
+                    }
+
+                    // IMPORTANT: Store Firestore document ID in the 'id' field
+                    const mappedItem = mapper({ ...data, id: doc.id });
+                    items.push(mappedItem);
+                });
+                setWallStatus(wallStatusEl, '', false);
+                console.log(`Loaded ${items.length} items from ${collectionRef.id}`);
+                return items;
+            } catch (error) {
+                console.error(`Error loading items from ${collectionRef.id}:`, error);
+                setWallStatus(wallStatusEl, 'Error loading items from database.', false);
+                showFeedback(`Failed to load ${collectionRef.id}.`, 'error');
+                return []; // Return empty array on error
+            }
+        }
+
+        // Map Firestore data to Video object structure
+        // NOTE: Added 'id' mapping from Firestore doc.id
+        const mapVideo = v => ({
+            id: v.id, // Firestore Document ID
+            youtubeId: v.youtubeId || '',
+            title: v.title || `Video ${v.youtubeId || v.id}`,
+            tags: Array.isArray(v.tags) ? [...new Set(v.tags)] : [],
+            type: v.type || 'algeria-outgoing',
+            addedAt: v.addedAt || Date.now()
+        });
+
+        // Map Firestore data to Photo object structure
+        // NOTE: Added 'id' mapping from Firestore doc.id
+        const mapPhoto = p => ({
+            id: p.id, // Firestore Document ID
+            imageUrl: p.imageUrl || '',
+            title: p.title || 'EP Photo',
+            tags: Array.isArray(p.tags) ? [...new Set(p.tags)] : [],
+            type: p.type || 'algeria-outgoing',
+            addedAt: p.addedAt || Date.now()
+        });
+
+        // Load initial data from Firestore
+        async function loadMediaFromFirestore() {
+            if (!firebaseInitialized) return;
+            // Load sequentially or in parallel
+            allVideos = await loadItems(videosCollection, mapVideo);
+            allPhotos = await loadItems(photosCollection, mapPhoto);
+        }
+
+        // Add item to Firestore
+        async function addItem(kind, newItemData) {
+             if (!firebaseInitialized) { showFeedback("Database not connected.", 'error'); return false; }
+             const collectionRef = kind === 'video' ? videosCollection : photosCollection;
+             if (!collectionRef) return false;
+
+             // Ensure 'addedAt' is a Firestore Timestamp for proper server-side ordering
+             const dataToSave = {
+                 ...newItemData,
+                 addedAt: firebase.firestore.FieldValue.serverTimestamp() // Use server timestamp
+             };
+             // Remove 'id' field if present, Firestore will generate it
+             delete dataToSave.id;
+
+             try {
+                 // Check for duplicates based on youtubeId or imageUrl before adding
+                 const uniqueField = kind === 'video' ? 'youtubeId' : 'imageUrl';
+                 const uniqueValue = newItemData[uniqueField];
+                 const q = collectionRef.where(uniqueField, '==', uniqueValue);
+                 const querySnapshot = await q.get();
+
+                 if (!querySnapshot.empty) {
+                    showFeedback(`${kind === 'video' ? 'Video' : 'Image'} with this ${uniqueField === 'youtubeId' ? 'ID' : 'URL'} already exists in the database.`, 'error');
+                    return false;
+                 }
+
+                 // Add the document
+                 const docRef = await collectionRef.add(dataToSave);
+                 console.log("Document written with ID: ", docRef.id);
+                 // Optionally: Add the new item to the local array immediately for faster UI update
+                 // (or rely on a full reload/realtime listener)
+                 const localItem = kind === 'video' ? mapVideo({...dataToSave, id: docRef.id, addedAt: Date.now()}) : mapPhoto({...dataToSave, id: docRef.id, addedAt: Date.now()});
+                 if (kind === 'video') allVideos.push(localItem); else allPhotos.push(localItem);
+
+                 return true;
+             } catch (error) {
+                 console.error(`Error adding ${kind} document: `, error);
+                 showFeedback(`Failed to add ${kind} to database.`, 'error');
+                 return false;
+             }
+         }
+
+        // Update item in Firestore
+        async function updateItem(kind, updatedItem) {
+             if (!firebaseInitialized) { showFeedback("Database not connected.", 'error'); return false; }
+             const collectionName = kind === 'video' ? 'videos' : 'photos';
+             const docId = updatedItem.id; // This should be the Firestore Document ID
+
+             if (!docId) {
+                 console.error("Cannot update item: Missing Firestore document ID.");
+                 showFeedback("Error updating item: ID missing.", 'error');
+                 return false;
+             }
+
+             // Prepare data: remove ID, ensure tags is array
+             const dataToUpdate = {
+                 title: updatedItem.title,
+                 tags: Array.isArray(updatedItem.tags) ? updatedItem.tags : parseTags(updatedItem.tags),
+                 // Do not update type or addedAt usually, but could if needed
+             };
+
+             try {
+                 const docRef = db.collection(collectionName).doc(docId);
+                 await docRef.update(dataToUpdate);
+                 console.log(`Document ${docId} successfully updated.`);
+
+                 // Update local cache
+                 const items = kind === 'video' ? allVideos : allPhotos;
+                 const index = items.findIndex(item => item.id === docId);
+                 if (index !== -1) {
+                     items[index] = { ...items[index], ...dataToUpdate }; // Update relevant fields locally
+                 }
+                 return true;
+             } catch (error) {
+                 console.error(`Error updating document ${docId}: `, error);
+                 showFeedback(`Failed to update ${kind} in database.`, 'error');
+                 return false;
+             }
+         }
+
+        // Remove item from Firestore
+        async function removeItem(kind, itemId) { // itemId is Firestore Document ID
+             if (!firebaseInitialized) { showFeedback("Database not connected.", 'error'); return false; }
+             const collectionName = kind === 'video' ? 'videos' : 'photos';
+
+             if (!itemId) {
+                 console.error("Cannot delete item: Missing Firestore document ID.");
+                  showFeedback("Error deleting item: ID missing.", 'error');
+                 return false;
+             }
+
+             try {
+                 await db.collection(collectionName).doc(itemId).delete();
+                 console.log(`Document ${itemId} successfully deleted!`);
+
+                 // Remove from local cache
+                 if (kind === 'video') {
+                     allVideos = allVideos.filter(item => item.id !== itemId);
+                 } else {
+                     allPhotos = allPhotos.filter(item => item.id !== itemId);
+                 }
+                 return true;
+             } catch (error) {
+                 console.error(`Error removing document ${itemId}: `, error);
+                 showFeedback(`Failed to delete ${kind} from database.`, 'error');
+                 return false;
+             }
+         }
+
+
+        // --- Rendering Functions (Unchanged, rely on 'id' which is now Firestore ID) ---
         function setWallStatus(wallStatusEl, message, isLoading = false) { const wallEl = wallStatusEl === videoWallStatus ? videoWall : photoWall; wallEl.innerHTML = ''; const textEl = wallStatusEl.querySelector('.wall-status-text'); const loaderEl = wallStatusEl.querySelector('.loader'); textEl.textContent = message; loaderEl.classList.toggle('hidden', !isLoading); wallStatusEl.classList.toggle('show', !!message || isLoading); }
-        function renderVideoItem(video) { const videoItem = document.createElement('div'); videoItem.className = 'video-item'; videoItem.dataset.id = video.id; let typeText = video.type === 'algeria-outgoing' ? 'Algerian EP' : 'Host Country Exp.'; let tagsHTML = `<span class="tag" data-tag-value="${video.type}" title="Experience Type">${typeText}</span>`; video.tags.forEach(tag => { const tagType = getTagType(tag); if (tagType === 'program' || tagType === 'custom') { tagsHTML += `<span class="tag clickable-tag" data-tag-type="${tagType}" data-tag-value="${tag}" title="Filter by '${tag}'">${tag}</span>`; } }); videoItem.innerHTML = `<div class="video-embed-container"><iframe loading="lazy" src="https://www.youtube.com/embed/${video.youtubeId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${video.title || 'EP Experience'}"></iframe></div><div class="video-info"><h4>${video.title || `YT: ${video.youtubeId}`}</h4><div class="video-tags">${tagsHTML}</div><div class="video-actions"><button class="edit-btn" title="Edit Video">✏️ Edit</button><button class="delete-btn" title="Delete Video">🗑️ Delete</button></div></div>`; videoItem.querySelector('.edit-btn').addEventListener('click', () => handleEditMedia('video', video.id)); videoItem.querySelector('.delete-btn').addEventListener('click', () => handleDeleteMedia('video', video.id)); videoWall.appendChild(videoItem); }
-        function renderPhotoItem(photo) { const photoItem = document.createElement('div'); photoItem.className = 'photo-item'; photoItem.dataset.id = photo.id; let typeText = photo.type === 'algeria-outgoing' ? 'Algerian EP' : 'Host Country Exp.'; let tagsHTML = `<span class="tag" data-tag-value="${photo.type}" title="Experience Type">${typeText}</span>`; photo.tags.forEach(tag => { const tagType = getTagType(tag); if (tagType === 'program' || tagType === 'custom') { tagsHTML += `<span class="tag clickable-tag" data-tag-type="${tagType}" data-tag-value="${tag}" title="Filter by '${tag}'">${tag}</span>`; } }); const img = new Image(); img.loading = 'lazy'; img.alt = photo.title || 'AIESEC EP Experience Photo'; img.onerror = () => { img.alt = `Error loading: ${photo.title || 'Image'}`; img.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10">Load Error</text></svg>'; }; img.src = photo.imageUrl; photoItem.innerHTML = `<div class="photo-image-container"></div><div class="photo-info"><h5>${photo.title || 'EP Experience Photo'}</h5><div class="photo-tags">${tagsHTML}</div><div class="photo-actions"><button class="edit-btn" title="Edit Photo">✏️ Edit</button><button class="delete-btn" title="Delete Photo">🗑️ Delete</button></div></div>`; photoItem.querySelector('.photo-image-container').appendChild(img); photoItem.querySelector('.edit-btn').addEventListener('click', () => handleEditMedia('photo', photo.id)); photoItem.querySelector('.delete-btn').addEventListener('click', () => handleDeleteMedia('photo', photo.id)); photoWall.appendChild(photoItem); }
-        function renderActiveWall(itemsToRender, kind = 'video') { const wallEl = kind === 'video' ? videoWall : photoWall; const wallStatusEl = kind === 'video' ? videoWallStatus : photoWallStatus; const renderFn = kind === 'video' ? renderVideoItem : renderPhotoItem; wallEl.innerHTML = ''; wallStatusEl.classList.remove('show'); if (itemsToRender.length === 0) { const searchTerm = searchInput.value.trim(); const hasActiveFilters = filterControls.querySelectorAll('input[type="checkbox"]:checked').length > 0; const targetLabel = kind === 'video' ? 'Videos' : 'Photos'; let emptyMessage = `No ${targetLabel.toLowerCase()} found for the current view/filters.`; setWallStatus(wallStatusEl, emptyMessage, false); } else { itemsToRender.forEach(renderFn); } }
-        function updateFilterOptions(kind = 'video') { const items = (kind === 'video' ? allVideos : allPhotos); const relevantItems = kind === 'video' ? items.filter(v => v.type === currentSubView) : items; const customTags = new Set(); relevantItems.forEach(item => { item.tags.forEach(tag => { if (getTagType(tag) === 'custom') customTags.add(tag); }); }); const existingFilters = customFiltersContainer.querySelectorAll('div:not(#custom-tags-placeholder)'); existingFilters.forEach(el => el.remove()); const sortedTags = Array.from(customTags).sort(); customTagsPlaceholder.style.display = sortedTags.length === 0 ? 'block' : 'none'; customTagsPlaceholder.textContent = sortedTags.length === 0 ? `(No custom tags for these ${kind === 'video' ? 'videos' : 'photos'} yet)` : ''; sortedTags.forEach(tag => { const filterId = `filter-custom-${tag.replace(/[^a-zA-Z0-9]/g, '')}`; if (document.getElementById(filterId)) return; const checkboxDiv = document.createElement('div'); checkboxDiv.innerHTML = `<input type="checkbox" id="${filterId}" value="${tag}" data-filter-type="custom"><label for="${filterId}">${tag.charAt(0).toUpperCase() + tag.slice(1)}</label>`; checkboxDiv.querySelector('input').addEventListener('change', handleFilterChange); customFiltersContainer.appendChild(checkboxDiv); }); const programFilterGroup = filterControls.querySelector('fieldset:has(#filter-gv)'); if (programFilterGroup) { programFilterGroup.style.display = (kind === 'video' || kind === 'photo') ? 'flex' : 'none'; } }
+        function renderVideoItem(video) { const videoItem = document.createElement('div'); videoItem.className = 'video-item'; videoItem.dataset.id = video.id; /* Use Firestore ID */ let typeText = video.type === 'algeria-outgoing' ? 'Algerian EP' : 'Host Country Exp.'; let tagsHTML = `<span class="tag" data-tag-value="${video.type}" title="Experience Type">${typeText}</span>`; video.tags.forEach(tag => { const tagType = getTagType(tag); if (tagType === 'program' || tagType === 'custom') { tagsHTML += `<span class="tag clickable-tag" data-tag-type="${tagType}" data-tag-value="${tag}" title="Filter by '${tag}'">${tag}</span>`; } }); videoItem.innerHTML = `<div class="video-embed-container"><iframe loading="lazy" src="https://www.youtube.com/embed/${video.youtubeId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${video.title || 'EP Experience'}"></iframe></div><div class="video-info"><h4>${video.title || `YT: ${video.youtubeId}`}</h4><div class="video-tags">${tagsHTML}</div><div class="video-actions"><button class="edit-btn" title="Edit Video">✏️ Edit</button><button class="delete-btn" title="Delete Video">🗑️ Delete</button></div></div>`; videoItem.querySelector('.edit-btn').addEventListener('click', () => handleEditMedia('video', video.id)); videoItem.querySelector('.delete-btn').addEventListener('click', () => handleDeleteMedia('video', video.id)); videoWall.appendChild(videoItem); }
+        function renderPhotoItem(photo) { const photoItem = document.createElement('div'); photoItem.className = 'photo-item'; photoItem.dataset.id = photo.id; /* Use Firestore ID */ let typeText = photo.type === 'algeria-outgoing' ? 'Algerian EP' : 'Host Country Exp.'; let tagsHTML = `<span class="tag" data-tag-value="${photo.type}" title="Experience Type">${typeText}</span>`; photo.tags.forEach(tag => { const tagType = getTagType(tag); if (tagType === 'program' || tagType === 'custom') { tagsHTML += `<span class="tag clickable-tag" data-tag-type="${tagType}" data-tag-value="${tag}" title="Filter by '${tag}'">${tag}</span>`; } }); const img = new Image(); img.loading = 'lazy'; img.alt = photo.title || 'AIESEC EP Experience Photo'; img.onerror = () => { img.alt = `Error loading: ${photo.title || 'Image'}`; img.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10">Load Error</text></svg>'; }; img.src = photo.imageUrl; photoItem.innerHTML = `<div class="photo-image-container"></div><div class="photo-info"><h5>${photo.title || 'EP Experience Photo'}</h5><div class="photo-tags">${tagsHTML}</div><div class="photo-actions"><button class="edit-btn" title="Edit Photo">✏️ Edit</button><button class="delete-btn" title="Delete Photo">🗑️ Delete</button></div></div>`; photoItem.querySelector('.photo-image-container').appendChild(img); photoItem.querySelector('.edit-btn').addEventListener('click', () => handleEditMedia('photo', photo.id)); photoItem.querySelector('.delete-btn').addEventListener('click', () => handleDeleteMedia('photo', photo.id)); photoWall.appendChild(photoItem); }
+        function renderActiveWall(itemsToRender, kind = 'video') { const wallEl = kind === 'video' ? videoWall : photoWall; const wallStatusEl = kind === 'video' ? videoWallStatus : photoWallStatus; const renderFn = kind === 'video' ? renderVideoItem : renderPhotoItem; wallEl.innerHTML = ''; wallStatusEl.classList.remove('show'); if (!firebaseInitialized && (kind === 'video' || kind === 'photo')) { setWallStatus(wallStatusEl, 'Database connection failed. Cannot display items.', false); return; } if (itemsToRender.length === 0) { const searchTerm = searchInput.value.trim(); const hasActiveFilters = filterControls.querySelectorAll('input[type="checkbox"]:checked').length > 0; const targetLabel = kind === 'video' ? 'Videos' : 'Photos'; let emptyMessage = `No ${targetLabel.toLowerCase()} found matching the current filters.`; setWallStatus(wallStatusEl, emptyMessage, false); } else { itemsToRender.forEach(renderFn); } }
+        function updateFilterOptions(kind = 'video') { if (!firebaseInitialized) return; const items = (kind === 'video' ? allVideos : allPhotos); const relevantItems = kind === 'video' ? items.filter(v => v.type === currentSubView) : items; const customTags = new Set(); relevantItems.forEach(item => { item.tags.forEach(tag => { if (getTagType(tag) === 'custom') customTags.add(tag); }); }); const existingFilters = customFiltersContainer.querySelectorAll('div:not(#custom-tags-placeholder)'); existingFilters.forEach(el => el.remove()); const sortedTags = Array.from(customTags).sort(); customTagsPlaceholder.style.display = sortedTags.length === 0 ? 'block' : 'none'; customTagsPlaceholder.textContent = sortedTags.length === 0 ? `(No custom tags for these ${kind === 'video' ? 'videos' : 'photos'} yet)` : ''; sortedTags.forEach(tag => { const filterId = `filter-custom-${tag.replace(/[^a-zA-Z0-9]/g, '')}`; if (document.getElementById(filterId)) return; const checkboxDiv = document.createElement('div'); checkboxDiv.innerHTML = `<input type="checkbox" id="${filterId}" value="${tag}" data-filter-type="custom"><label for="${filterId}">${tag.charAt(0).toUpperCase() + tag.slice(1)}</label>`; checkboxDiv.querySelector('input').addEventListener('change', handleFilterChange); customFiltersContainer.appendChild(checkboxDiv); }); const programFilterGroup = filterControls.querySelector('fieldset:has(#filter-gv)'); if (programFilterGroup) { programFilterGroup.style.display = (kind === 'video' || kind === 'photo') ? 'flex' : 'none'; } }
 
-        // --- Event Handlers (Keep handleFetchTitleClick, handleDeleteMedia, handleEditMedia, handleSaveEdit, closeEditModal, handleFilterChange, handleTagClick from previous) ---
-        async function handleAddMedia() { formFeedback.classList.remove('show'); const urlValue = mediaUrlInput.value.trim(); const tagsValue = mediaTagsInput.value.trim(); let titleValue = mediaTitleInput.value.trim(); const selectedMediaType = mediaTypeSelect.value; const tags = parseTags(tagsValue); const kind = currentView === 'video-wall-container' ? 'video' : 'photo'; if (!urlValue) { showFeedback(`Please enter a ${kind === 'video' ? 'YouTube URL/ID' : 'Direct Image URL'}.`, 'error'); return; } let newItemData = { id: generateUniqueId(), tags: tags, type: selectedMediaType, addedAt: Date.now() }; let success = false; if (kind === 'video') { const youtubeId = extractYouTubeId(urlValue); if (!youtubeId) { showFeedback('Invalid YouTube URL/ID.', 'error'); return; } if (!titleValue) { const fetchedTitle = await fetchYouTubeTitle(youtubeId); titleValue = fetchedTitle || `AIESEC Video (${youtubeId})`; mediaTitleInput.value = titleValue; } newItemData = { ...newItemData, youtubeId: youtubeId, title: titleValue }; success = addItem('video', newItemData); } else { if (!isValidImageUrl(urlValue)) { showFeedback('Please use a direct image URL (.jpg, .png, etc.)', 'error', 7000); return; } newItemData = { ...newItemData, imageUrl: urlValue, title: titleValue || 'EP Experience Photo' }; success = addItem('photo', newItemData); } if (success) { showFeedback(`${kind === 'video' ? 'Video' : 'Photo'} added!`, 'success'); mediaUrlInput.value = ''; mediaTagsInput.value = ''; mediaTitleInput.value = ''; applyFiltersAndRender(); updateFilterOptions(kind); } }
-        async function handleFetchTitleClick() { if (currentView !== 'video-wall-container') return; formFeedback.classList.remove('show'); const urlValue = mediaUrlInput.value.trim(); const youtubeId = extractYouTubeId(urlValue); if (!youtubeId) { showFeedback('Enter valid YT URL/ID.', 'error'); return; } const fetchedTitle = await fetchYouTubeTitle(youtubeId); if (fetchedTitle) { mediaTitleInput.value = fetchedTitle; showFeedback('Title fetched!', 'success'); } }
-        function handleDeleteMedia(kind, itemId) { if (!confirm(`Delete this ${kind}?`)) return; if (removeItem(kind, itemId)) { applyFiltersAndRender(); updateFilterOptions(kind); } else { showFeedback(`Error deleting ${kind}.`, 'error'); } }
-        function handleEditMedia(kind, itemId) { const items = kind === 'video' ? allVideos : allPhotos; const itemToEdit = items.find(item => item.id === itemId); if (!itemToEdit) { alert(`Error: ${kind} not found.`); return; } editMediaIdInput.value = itemToEdit.id; editMediaKindInput.value = kind; editMediaTitleInput.value = itemToEdit.title; editMediaTagsInput.value = itemToEdit.tags.join(', '); editModalTitle.textContent = `Edit ${kind === 'video' ? 'Video' : 'Photo'} Details`; editMediaTitleLabel.textContent = kind === 'video' ? 'Video Title' : 'Photo Caption / Title'; editModal.classList.add('active'); }
-        function handleSaveEdit() { const itemId = editMediaIdInput.value; const kind = editMediaKindInput.value; const newTitle = editMediaTitleInput.value.trim(); const newTagsString = editMediaTagsInput.value.trim(); const newTags = parseTags(newTagsString); if (!itemId || !kind) { alert('Error: Cannot save changes.'); return; } const items = kind === 'video' ? allVideos : allPhotos; const itemToUpdate = items.find(item => item.id === itemId); if (!itemToUpdate) { alert(`Error: ${kind} not found.`); return; } const updatedItem = { ...itemToUpdate, title: newTitle || (kind === 'video' ? `Experience (${itemToUpdate.youtubeId})` : 'EP Photo'), tags: newTags }; if (updateItem(kind, updatedItem)) { closeEditModal(); applyFiltersAndRender(); updateFilterOptions(kind); } else { alert('Error saving changes.'); } }
-        function closeEditModal() { editModal.classList.remove('active'); }
-        function handleFilterChange() { applyFiltersAndRender(); }
-        function handleTagClick(event) { const wall = event.target.closest('#video-wall, #photo-wall'); if (!wall || !event.target.classList.contains('clickable-tag')) return; const tagValue = event.target.dataset.tagValue; const tagType = event.target.dataset.tagType; let checkboxId = tagType === 'program' ? `filter-${tagValue}` : `filter-custom-${tagValue.replace(/[^a-zA-Z0-9]/g, '')}`; const checkbox = document.getElementById(checkboxId); if (checkbox) { checkbox.checked = !checkbox.checked; handleFilterChange(); } else { console.warn(`Checkbox not found for tag: ${tagValue}`); } }
+        // --- Event Handlers (Modified to be async where needed) ---
+        async function handleAddMedia() {
+            if (!firebaseInitialized) { showFeedback("Database not connected.", 'error'); return; }
+            formFeedback.classList.remove('show');
+            const urlValue = mediaUrlInput.value.trim();
+            const tagsValue = mediaTagsInput.value.trim();
+            let titleValue = mediaTitleInput.value.trim();
+            const selectedMediaType = mediaTypeSelect.value; // e.g., 'algeria-outgoing'
+            const tags = parseTags(tagsValue); // Array of tags
+            const kind = currentView === 'video-wall-container' ? 'video' : 'photo';
 
-        // --- Core Logic: Apply Filters, Sort, and Render (Keep from previous) ---
-        function applyFiltersAndRender() {
-             const kind = currentView === 'video-wall-container' ? 'video' : 'photo';
+            if (!urlValue) {
+                showFeedback(`Please enter a ${kind === 'video' ? 'YouTube URL/ID' : 'Direct Image URL'}.`, 'error');
+                return;
+            }
+
+            // Prepare base data structure for Firestore
+            let newItemData = {
+                tags: tags,
+                type: selectedMediaType,
+                // addedAt will be set by serverTimestamp in addItem function
+            };
+            let success = false;
+
+            if (kind === 'video') {
+                const youtubeId = extractYouTubeId(urlValue);
+                if (!youtubeId) {
+                    showFeedback('Invalid YouTube URL/ID.', 'error');
+                    return;
+                }
+                if (!titleValue) {
+                    // Fetch title only if field is empty
+                    const fetchedTitle = await fetchYouTubeTitle(youtubeId); // Await the async fetch
+                    titleValue = fetchedTitle || `AIESEC Video (${youtubeId})`;
+                    mediaTitleInput.value = titleValue; // Update input if fetched
+                }
+                newItemData = { ...newItemData, youtubeId: youtubeId, title: titleValue };
+                success = await addItem('video', newItemData); // Await the async addItem
+
+            } else { // kind === 'photo'
+                if (!isValidImageUrl(urlValue)) {
+                    showFeedback('Please use a direct image URL (.jpg, .png, etc.)', 'error', 7000);
+                    return;
+                }
+                newItemData = { ...newItemData, imageUrl: urlValue, title: titleValue || 'EP Experience Photo' };
+                success = await addItem('photo', newItemData); // Await the async addItem
+            }
+
+            if (success) {
+                showFeedback(`${kind === 'video' ? 'Video' : 'Photo'} added!`, 'success');
+                mediaUrlInput.value = '';
+                mediaTagsInput.value = '';
+                mediaTitleInput.value = '';
+                // Re-apply filters and render to show the new item (including item added locally)
+                applyFiltersAndRender();
+                updateFilterOptions(kind);
+            }
+            // Error feedback handled within addItem
+        }
+
+        async function handleFetchTitleClick() { /* Unchanged - already async */ if (currentView !== 'video-wall-container') return; formFeedback.classList.remove('show'); const urlValue = mediaUrlInput.value.trim(); const youtubeId = extractYouTubeId(urlValue); if (!youtubeId) { showFeedback('Enter valid YT URL/ID.', 'error'); return; } const fetchedTitle = await fetchYouTubeTitle(youtubeId); if (fetchedTitle) { mediaTitleInput.value = fetchedTitle; showFeedback('Title fetched!', 'success'); } }
+
+        async function handleDeleteMedia(kind, itemId) { // itemId is Firestore ID
+            if (!firebaseInitialized) { showFeedback("Database not connected.", 'error'); return; }
+            if (!confirm(`Delete this ${kind}? This cannot be undone.`)) return;
+
+            if (await removeItem(kind, itemId)) { // Await the async remove
+                applyFiltersAndRender(); // Re-render from local cache (which was updated)
+                updateFilterOptions(kind);
+            }
+            // Error feedback handled within removeItem
+        }
+
+        function handleEditMedia(kind, itemId) { // itemId is Firestore ID
+             if (!firebaseInitialized) return;
              const items = kind === 'video' ? allVideos : allPhotos;
+             const itemToEdit = items.find(item => item.id === itemId); // Find by Firestore ID
+             if (!itemToEdit) {
+                 alert(`Error: ${kind} not found locally. Try refreshing.`);
+                 return;
+             }
+             editMediaIdInput.value = itemToEdit.id; // Store Firestore ID
+             editMediaKindInput.value = kind;
+             editMediaTitleInput.value = itemToEdit.title;
+             editMediaTagsInput.value = itemToEdit.tags.join(', ');
+             editModalTitle.textContent = `Edit ${kind === 'video' ? 'Video' : 'Photo'} Details`;
+             editMediaTitleLabel.textContent = kind === 'video' ? 'Video Title' : 'Photo Caption / Title';
+             editModal.classList.add('active');
+         }
+
+        async function handleSaveEdit() {
+            if (!firebaseInitialized) { showFeedback("Database not connected.", 'error'); return; }
+            const itemId = editMediaIdInput.value; // Firestore ID
+            const kind = editMediaKindInput.value;
+            const newTitle = editMediaTitleInput.value.trim();
+            const newTagsString = editMediaTagsInput.value.trim();
+            const newTags = parseTags(newTagsString);
+
+            if (!itemId || !kind) {
+                alert('Error: Cannot save changes. Missing ID or type.');
+                return;
+            }
+
+            // Find the original item locally just to get other details if needed
+            const items = kind === 'video' ? allVideos : allPhotos;
+            const originalItem = items.find(item => item.id === itemId);
+            if (!originalItem) {
+                 alert(`Error: Original ${kind} not found locally. Cannot save.`);
+                 return;
+            }
+
+            // Prepare the object to send for update
+            const updatedItemData = {
+                id: itemId, // Pass Firestore ID
+                title: newTitle || (kind === 'video' ? `Experience (${originalItem.youtubeId})` : 'EP Photo'),
+                tags: newTags
+            };
+
+            if (await updateItem(kind, updatedItemData)) { // Await the async update
+                closeEditModal();
+                applyFiltersAndRender(); // Re-render from local cache (which was updated)
+                updateFilterOptions(kind); // Update filter options if tags changed
+            }
+            // Error feedback handled within updateItem
+        }
+
+        function closeEditModal() { /* Unchanged */ editModal.classList.remove('active'); }
+        function handleFilterChange() { /* Unchanged */ applyFiltersAndRender(); }
+        function handleTagClick(event) { /* Unchanged */ const wall = event.target.closest('#video-wall, #photo-wall'); if (!wall || !event.target.classList.contains('clickable-tag')) return; const tagValue = event.target.dataset.tagValue; const tagType = event.target.dataset.tagType; let checkboxId = tagType === 'program' ? `filter-${tagValue}` : `filter-custom-${tagValue.replace(/[^a-zA-Z0-9]/g, '')}`; const checkbox = document.getElementById(checkboxId); if (checkbox) { checkbox.checked = !checkbox.checked; handleFilterChange(); } else { console.warn(`Checkbox not found for tag: ${tagValue}`); } }
+
+        // --- Core Logic: Apply Filters, Sort, and Render (Largely unchanged, uses local cache) ---
+        function applyFiltersAndRender() {
+             if (!firebaseInitialized && (currentView === 'video-wall-container' || currentView === 'photo-wall-container')) {
+                 renderActiveWall([], currentView === 'video-wall-container' ? 'video' : 'photo'); // Show error message via renderActiveWall
+                 return;
+             }
+             const kind = currentView === 'video-wall-container' ? 'video' : 'photo';
+             const items = kind === 'video' ? allVideos : allPhotos; // Use locally cached data
              const wallStatusEl = kind === 'video' ? videoWallStatus : photoWallStatus;
              setWallStatus(wallStatusEl, 'Applying filters...', true);
+             // Use setTimeout to allow UI to update loading state before filtering
              setTimeout(() => {
                  const searchTerm = searchInput.value.trim().toLowerCase();
                  const sortBy = sortOptions.value;
@@ -434,73 +891,53 @@
                  checkedCheckboxes.forEach(checkbox => { const filterType = checkbox.dataset.filterType; if (activeFilters[filterType]) activeFilters[filterType].push(checkbox.value); });
                  const hasTagFilters = Object.values(activeFilters).some(arr => arr.length > 0);
                  if (hasTagFilters) { filteredItems = filteredItems.filter(item => Object.keys(activeFilters).every(filterType => { const selectedTags = activeFilters[filterType]; if (selectedTags.length === 0) return true; return item.tags.some(tag => selectedTags.includes(tag)); })); }
-                 switch (sortBy) { case 'oldest': filteredItems.sort((a, b) => a.addedAt - b.addedAt); break; case 'title_asc': filteredItems.sort((a, b) => a.title.localeCompare(b.title)); break; case 'title_desc': filteredItems.sort((a, b) => b.title.localeCompare(a.title)); break; default: filteredItems.sort((a, b) => b.addedAt - a.addedAt); break; }
+                 // Sort by date: Use numeric timestamp directly
+                 switch (sortBy) {
+                     case 'oldest': filteredItems.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0)); break;
+                     case 'title_asc': filteredItems.sort((a, b) => a.title.localeCompare(b.title)); break;
+                     case 'title_desc': filteredItems.sort((a, b) => b.title.localeCompare(a.title)); break;
+                     default: // newest
+                         filteredItems.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)); break;
+                  }
                  renderActiveWall(filteredItems, kind);
-             }, 50);
+             }, 50); // Short delay
          }
 
-        // --- UPDATED View & Mode Switching ---
-         function switchView(newViewId, newSubView = null) {
-             // Don't switch if already active
+        // --- View & Mode Switching (Modified to be async where needed) ---
+         async function switchView(newViewId, newSubView = null) { // Made async to await data loading if needed
              if (newViewId === currentView && newSubView === currentSubView) return;
-
-             console.log(`Switching view to: ${newViewId}, SubView: ${newSubView}`); // Debug log
-
+             console.log(`Switching view to: ${newViewId}, SubView: ${newSubView}`);
              currentView = newViewId;
-             // Only update subview if the main view is the video container
-             if (newViewId === 'video-wall-container') {
-                currentSubView = newSubView;
-             } else {
-                 currentSubView = null; // Reset subview if not on video wall
-             }
+             if (newViewId === 'video-wall-container') { currentSubView = newSubView; } else { currentSubView = null; }
 
-
-             // Update Active Button in Selector
              viewSelector.querySelectorAll('button').forEach(btn => {
                  const buttonViewId = btn.dataset.view;
                  const buttonSubView = btn.dataset.subview || null;
-                 // Active if view matches, AND (if subview exists) subview matches
                  const isActive = (buttonViewId === newViewId) && (buttonSubView === currentSubView || !currentSubView && !buttonSubView);
                  btn.classList.toggle('active', isActive);
              });
-
-             // Show/Hide View Containers
-             viewContainers.forEach(container => {
-                 container.classList.toggle('active', container.id === newViewId);
-             });
-
-             // Show/Hide Controls Container
+             viewContainers.forEach(container => { container.classList.toggle('active', container.id === newViewId); });
              const showControls = (newViewId === 'video-wall-container' || newViewId === 'photo-wall-container');
              controlsContainer.classList.toggle('hidden', !showControls);
 
-
-             // Adapt UI Elements for Current View
              const isVideoView = newViewId === 'video-wall-container';
              const isPhotoView = newViewId === 'photo-wall-container';
-             const isOpportunitiesView = newViewId === 'opportunities-view-container'; // Use correct ID
+             const isOpportunitiesView = newViewId === 'opportunities-view-container';
              const kind = isVideoView ? 'video' : (isPhotoView ? 'photo' : null);
 
-             // Enable/Disable Focus Mode Toggle
              focusModeToggle.disabled = !isVideoView;
-             if (!isVideoView && body.classList.contains('focus-mode-active')) {
-                 toggleFocusMode(); // Exit focus mode if switching away
-             }
-             // Close help panel when switching views
-             if (helpPanel.classList.contains('active')) {
-                 toggleHelpPanel();
-             }
+             if (!isVideoView && body.classList.contains('focus-mode-active')) { toggleFocusMode(); }
+             if (helpPanel.classList.contains('active')) { toggleHelpPanel(); }
 
              if (kind) { // Video or Photo view active
-                 // Adapt Add Form
                 addMediaTitle.textContent = `Add New EP ${isVideoView ? 'Video' : 'Photo'}`;
                 mediaUrlLabel.textContent = isVideoView ? 'YouTube URL or ID' : 'Direct Image URL';
                 mediaTitleLabel.textContent = isVideoView ? 'Video Title' : 'Photo Caption/Title';
                 fetchTitleBtn.style.display = isVideoView ? '' : 'none';
                 photoUrlHint.classList.toggle('hidden', isVideoView);
                 addMediaBtn.textContent = `Add ${isVideoView ? 'Video' : 'Photo'}`;
-                mediaTypeSelect.value = currentSubView || 'algeria-outgoing'; // Default type based on subview
+                mediaTypeSelect.value = currentSubView || 'algeria-outgoing';
 
-                // Adapt Search/Filter Labels
                 const targetLabelContent = isVideoView ? 'Videos' : 'Photos';
                 searchTargetLabel.textContent = targetLabelContent;
                 filterTargetLabel.textContent = targetLabelContent;
@@ -509,59 +946,57 @@
                     : 'EP Photos';
                 currentViewHelpLabel.textContent = targetLabelContent;
 
-                // Reset controls and render
+                // Data should already be loaded during initializeApp
+                // If not, you might need: await loadMediaFromFirestore(); here, but initial load is better.
                 searchInput.value = '';
                 filterControls.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
                 sortOptions.value = 'newest';
-                updateFilterOptions(kind);
-                applyFiltersAndRender();
+                updateFilterOptions(kind); // Update filters based on loaded data
+                applyFiltersAndRender(); // Render based on loaded data & filters
              } else if (isOpportunitiesView) {
-                // Handle iframe (ensure fallback check runs)
-                 setTimeout(checkIframeBlocked, 500); // Check after a brief delay
+                 setTimeout(checkIframeBlocked, 500);
              }
          }
 
-         // Check if iframe content is blocked
-         function checkIframeBlocked() {
-             try {
-                 // Attempt to access contentDocument. If it fails due to cross-origin policy, it's blocked.
-                 // If it succeeds but body is empty/inaccessible, it might also indicate blocking or loading issues.
-                 const isBlocked = !opportunitiesFrame.contentDocument || !opportunitiesFrame.contentDocument.body || opportunitiesFrame.contentDocument.body.childNodes.length === 0;
-                 opportunitiesFallback.classList.toggle('hidden', !isBlocked);
-             } catch (e) {
-                 // Access denied - definitely blocked
-                 opportunitiesFallback.classList.remove('hidden');
-                 console.warn("Cannot access iframe content - likely blocked by X-Frame-Options or CSP.");
-             }
-         }
+         // Check if iframe content is blocked (Unchanged)
+         function checkIframeBlocked() { try { const isBlocked = !opportunitiesFrame.contentDocument || !opportunitiesFrame.contentDocument.body || opportunitiesFrame.contentDocument.body.childNodes.length === 0; opportunitiesFallback.classList.toggle('hidden', !isBlocked); } catch (e) { opportunitiesFallback.classList.remove('hidden'); console.warn("Cannot access iframe content - likely blocked by X-Frame-Options or CSP."); } }
 
+        function toggleFocusMode() { /* Unchanged */ body.classList.toggle('focus-mode-active'); const isFocusActive = body.classList.contains('focus-mode-active'); focusModeToggle.title = isFocusActive ? 'Disable Focus Mode' : 'Enable Focus Mode'; focusModeToggle.innerHTML = isFocusActive ? '<span class="icon-focus-off"></span>' : '<span class="icon-focus-on"></span>'; /* Placeholder: Add actual SVG/Font Icon update here */ if (isFocusActive && helpPanel.classList.contains('active')) { toggleHelpPanel(); } }
+        function toggleHelpPanel() { /* Unchanged */ helpPanel.classList.toggle('active'); }
 
-        function toggleFocusMode() { /* Keep from previous */ body.classList.toggle('focus-mode-active'); const isFocusActive = body.classList.contains('focus-mode-active'); focusModeToggle.title = isFocusActive ? 'Disable Focus Mode' : 'Enable Focus Mode'; focusModeToggle.innerHTML = isFocusActive ? '<span class="icon-focus-off"></span>' : '<span class="icon-focus-on"></span>'; if (isFocusActive && helpPanel.classList.contains('active')) { toggleHelpPanel(); } }
-        function toggleHelpPanel() { /* Keep from previous */ helpPanel.classList.toggle('active'); }
-
-        // --- Debounced search handler (Keep from previous) ---
+        // --- Debounced search handler (Unchanged) ---
         const debouncedSearch = debounce(applyFiltersAndRender, 300);
 
-        // --- Initialization ---
-        function initializeApp() {
-            console.log("Initializing App..."); // Debug log
-            loadMediaFromStorage();
+        // --- Initialization (Modified to be async) ---
+        async function initializeApp() {
+            console.log("Initializing App...");
+            // Wait for Firebase to potentially initialize
+            if (!firebaseInitialized) {
+                console.error("Firebase failed to initialize. App may not function correctly.");
+                 // Optionally disable add/edit/delete buttons here if needed
+                 addMediaBtn.disabled = true;
+                 // Show persistent error on walls? renderActiveWall handles this.
+                 // return; // Stop initialization if critical
+            } else {
+                await loadMediaFromFirestore(); // Load initial data from Firestore
+            }
 
-            // Initial View Setup (Default: Algerian EP Videos)
-            switchView('video-wall-container', 'algeria-outgoing');
+            // Initial View Setup (Default: Algerian EP Videos) - Now potentially async
+            await switchView('video-wall-container', 'algeria-outgoing'); // Wait for view setup
 
-            // Event Listeners
-            addMediaBtn.addEventListener('click', handleAddMedia);
-            fetchTitleBtn.addEventListener('click', handleFetchTitleClick);
+            // Event Listeners (Attach AFTER initial load and view setup)
+            addMediaBtn.addEventListener('click', handleAddMedia); // Now async
+            fetchTitleBtn.addEventListener('click', handleFetchTitleClick); // Already async
 
-            // View Selector Buttons (Using Delegation)
-            viewSelector.addEventListener('click', (event) => {
-                const button = event.target.closest('button'); // Find the clicked button
-                if (button) {
+            viewSelector.addEventListener('click', async (event) => { // Make listener async
+                const button = event.target.closest('button');
+                if (button && firebaseInitialized) { // Only allow switching if DB connected
                     const viewId = button.dataset.view;
                     const subView = button.dataset.subview || null;
-                    console.log(`Button Clicked: view=${viewId}, subview=${subView}`); // Debug log
-                    switchView(viewId, subView);
+                    console.log(`Button Clicked: view=${viewId}, subview=${subView}`);
+                    await switchView(viewId, subView); // Await view switch
+                } else if (button && !firebaseInitialized) {
+                    showFeedback("Database connection failed.", "error");
                 }
             });
 
@@ -577,15 +1012,14 @@
 
             modalCloseBtn.addEventListener('click', closeEditModal);
             modalCancelBtn.addEventListener('click', closeEditModal);
-            modalSaveBtn.addEventListener('click', handleSaveEdit);
+            modalSaveBtn.addEventListener('click', handleSaveEdit); // Now async
             editModal.addEventListener('click', (event) => { if (event.target === editModal) closeEditModal(); });
             document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && editModal.classList.contains('active')) closeEditModal(); });
 
-            // Initial Render (handled by switchView)
              console.log("App Initialized.");
         }
 
-        // Run initialization
+        // Run initialization after DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeApp);
 
     </script>
